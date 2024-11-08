@@ -6,7 +6,9 @@ import {
   ServerStackIcon,
   RectangleStackIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Tables, Notifications, CreateReport} from "@/pages/dashboard";
+
+import { Home, Profile, Report, AdminReport, Notifications} from "@/pages/dashboard";
+import CreateReport from "@/pages/dashboard/CreateReport";
 import { SignIn, SignUp } from "@/pages/auth";
 
 const icon = {
@@ -24,16 +26,16 @@ export const routes = [
         element: <Home />,
       },
       {
-        icon: <UserCircleIcon {...icon} />,
-        name: "profile",
-        path: "/profile",
-        element: <Profile />,
+        icon: <TableCellsIcon {...icon} />,
+        name: "Report",
+        path: "/report",
+        element: <Report />,
       },
       {
         icon: <TableCellsIcon {...icon} />,
-        name: "tables",
-        path: "/tables",
-        element: <Tables />,
+        name: "Admin Report",
+        path: "/report-admin",
+        element: <AdminReport />,
       },
       {
         icon: <InformationCircleIcon {...icon} />,
@@ -43,8 +45,8 @@ export const routes = [
       },
       {
         icon: <RectangleStackIcon {...icon} />,
-        name: "create report",
-        path: "/reports",
+        name: "Create Report",
+        path: "/CreateReport",
         element: <CreateReport />,
       },
     ],
@@ -54,16 +56,10 @@ export const routes = [
     layout: "auth",
     pages: [
       {
-        icon: <ServerStackIcon {...icon} />,
-        name: "sign in",
-        path: "/sign-in",
-        element: <SignIn />,
-      },
-      {
-        icon: <RectangleStackIcon {...icon} />,
-        name: "sign up",
-        path: "/sign-up",
-        element: <SignUp />,
+        icon: <UserCircleIcon {...icon} />,
+        name: "profile",
+        path: "/profile",
+        element: <Profile />,
       },
     ],
   },
