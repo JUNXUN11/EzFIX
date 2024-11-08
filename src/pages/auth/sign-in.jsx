@@ -109,7 +109,7 @@ export function SignIn() {
         </div>
         <div className="w-2/5 hidden lg:block">
           <img
-            src="/img/pattern.png"
+            src="/img/KTDI_p2.jpg"
             className="h-full w-full object-cover"
             alt="Pattern background"
           />

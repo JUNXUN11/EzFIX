@@ -16,8 +16,9 @@ export const authService = {
       }
 
       const data = await response.json();
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      if (data.accessToken && data.refreshToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
       }
       return data;
@@ -41,8 +42,9 @@ export const authService = {
       }
 
       const data = await response.json();
-      if (data.token) {
-        localStorage.setItem('token', data.token);
+      if (data.accessToken && data.refreshToken) {
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
         localStorage.setItem('user', JSON.stringify(data.user));
       }
       return data;
@@ -52,19 +54,50 @@ export const authService = {
   },
 
   logout() {
-    localStorage.removeItem('token');
+    // Clear tokens and user data from local storage
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
   },
 
   getCurrentUser() {
-    const token = localStorage.getItem('token');
+    const accessToken = localStorage.getItem('accessToken');
     const user = localStorage.getItem('user');
-    return token && user ? { token, user: JSON.parse(user) } : null;
+    return accessToken && user ? { accessToken, user: JSON.parse(user) } : null;
   },
 
-  // Use this function to add the auth token to API requests
   getAuthHeader() {
-    const token = localStorage.getItem('token');
-    return token ? { 'Authorization': `Bearer ${token}` } : {};
+    const accessToken = localStorage.getItem('accessToken');
+    return accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {};
+  },
+
+  async refreshToken() {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) throw new Error('No refresh token available');
+
+    try {
+      const response = await fetch(`${API_URL}/users/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${refreshToken}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to refresh access token');
+      }
+
+      const data = await response.json();
+      const newAccessToken = data.accessToken;
+      
+      localStorage.setItem('accessToken', newAccessToken);
+      
+      return newAccessToken;
+    } catch (error) {
+      console.error('Failed to refresh access token:', error);
+      this.logout(); 
+      throw error;
+    }
   }
 };
