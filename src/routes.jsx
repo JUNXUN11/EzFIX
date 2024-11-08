@@ -54,6 +54,18 @@ export const routes = [
     layout: "auth",
     pages: [
       {
+        icon: <UserCircleIcon {...icon} />,
+        name: "profile",
+        path: "/profile",
+        element: <Profile />,
+      },
+    ],
+  },
+  {
+    title: "auth pages",
+    layout: "auth",
+    pages: [
+      {
         icon: <ServerStackIcon {...icon} />,
         name: "sign in",
         path: "/sign-in",

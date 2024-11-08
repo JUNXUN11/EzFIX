@@ -33,7 +33,7 @@ export function SignUp() {
       <section className="m-8 flex w-full max-w-5xl rounded-3xl shadow-lg overflow-hidden bg-white">
         <div className="w-2/5 hidden lg:block">
           <img
-            src="/img/KTDI_p2.jpg"
+            src="/img/KTDI_p1.jpg"
             className="h-full w-full object-cover"
             alt="Pattern background"
           />
@@ -150,6 +150,7 @@ export function SignUp() {
               fullWidth
               type="submit"
               disabled={loading}
+              
             >
               {loading ? "Registering..." : "Register Now"}
             </Button>
