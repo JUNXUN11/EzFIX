@@ -9,7 +9,7 @@ import {
   Progress,
 } from "@material-tailwind/react";
 import { EllipsisVerticalIcon } from "@heroicons/react/24/outline";
-import { authorsTableData, projectsTableData } from "@/data";
+import { reportsTableData, projectsTableData } from "@/data";
 
 export function Report() {
   return (
@@ -17,7 +17,7 @@ export function Report() {
       <Card>
         <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
           <Typography variant="h6" color="white">
-            Authors Table
+            Reports Table
           </Typography>
         </CardHeader>
         <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
@@ -40,10 +40,10 @@ export function Report() {
               </tr>
             </thead>
             <tbody>
-              {authorsTableData.map(
+              {reportsTableData.map(
                 ({ img, name, email, job, online, date }, key) => {
                   const className = `py-3 px-5 ${
-                    key === authorsTableData.length - 1
+                    key === reportsTableData.length - 1
                       ? ""
                       : "border-b border-blue-gray-50"
                   }`;
