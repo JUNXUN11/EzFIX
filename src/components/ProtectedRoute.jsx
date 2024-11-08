@@ -1,12 +1,16 @@
-// src/components/ProtectedRoute.jsx
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { ClipLoader } from 'react-spinners';
 
 export function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <ClipLoader size={50} color="#123abc" loading={loading} />
+      </div>
+    );
   }
 
   if (!isAuthenticated) {

@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { Dashboard, Auth } from "@/layouts";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 
-export function App() {  // Changed to named export
+export function App() {  
   return (
     <AuthProvider>
       <Routes>
