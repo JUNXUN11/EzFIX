@@ -19,20 +19,31 @@ export function SignIn() {
   };
 
   return (
-    <div className="h-screen overflow-hidden">
-      <section className="m-8 flex gap-4">
-        <div className="w-full lg:w-3/5 mt-24">
-          <div className="text-center">
-            <Typography variant="h2" className="font-bold mb-4">
+    <div className="h-screen bg-gradient-to-r from-blue-50 to-blue-100 flex justify-center items-center">
+      <section className="m-8 flex w-full max-w-5xl rounded-3xl shadow-lg overflow-hidden bg-white">
+        <div className="w-full lg:w-3/5 flex flex-col items-center justify-center p-8">
+          <div className="text-center mb-6">
+            <Typography variant="h2" className="font-bold text-gray-800 mb-2">
               Sign In
             </Typography>
-            <Typography variant="paragraph" color="blue-gray" className="text-lg font-normal">
+            <Typography
+              variant="paragraph"
+              color="blue-gray"
+              className="text-lg font-normal"
+            >
               Enter your username and password to Sign In.
             </Typography>
           </div>
-          <form className="mt-8 mb-2 mx-auto w-80 max-w-screen-lg lg:w-1/2" onSubmit={handleSubmit}>
-            <div className="mb-1 flex flex-col gap-6">
-              <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+          <form
+            className="w-full px-8 lg:px-16"
+            onSubmit={handleSubmit}
+          >
+            <div className="mb-5">
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="font-medium"
+              >
                 Username
               </Typography>
               <Input
@@ -40,12 +51,18 @@ export function SignIn() {
                 placeholder="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="!border-t-blue-gray-200 focus:!border-t-gray-900"
+                className="mt-2 !border-t-blue-gray-200 focus:!border-t-gray-900 rounded-lg"
                 labelProps={{
                   className: "before:content-none after:content-none",
-                }}               
+                }}
               />
-              <Typography variant="small" color="blue-gray" className="-mb-3 font-medium">
+            </div>
+            <div className="mb-5">
+              <Typography
+                variant="small"
+                color="blue-gray"
+                className="font-medium"
+              >
                 Password
               </Typography>
               <Input
@@ -54,32 +71,47 @@ export function SignIn() {
                 placeholder="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="!border-t-blue-gray-200 focus:!border-t-gray-900"
+                className="mt-2 !border-t-blue-gray-200 focus:!border-t-gray-900 rounded-lg"
                 labelProps={{
                   className: "before:content-none after:content-none",
-                }}              
+                }}
               />
             </div>
+
             {error && (
-              <Typography variant="small" color="red" className="mt-2 text-center">
+              <Typography
+                variant="small"
+                color="red"
+                className="mt-2 text-center"
+              >
                 {error}
               </Typography>
             )}
-            <Button className="mt-6" fullWidth type="submit" disabled={loading}>
+
+            <Button
+              className="mt-16 py-3 rounded-lg"
+              fullWidth
+              type="submit"
+              disabled={loading}
+            >
               {loading ? "Signing in..." : "Sign In"}
             </Button>
-
-            <Typography variant="paragraph" className="text-center text-blue-gray-500 font-medium mt-4">
+            <Typography
+              variant="paragraph"
+              className="text-center text-blue-gray-500 font-medium mt-4"
+            >
               Not registered?
-              <Link to="/auth/sign-up" className="text-gray-900 ml-1">Create account</Link>
+              <Link to="/auth/sign-up" className="text-gray-900 ml-1">
+                Create account
+              </Link>
             </Typography>
           </form>
         </div>
         <div className="w-2/5 hidden lg:block">
           <img
             src="/img/pattern.png"
-            className="h-3/4 w-full object-cover rounded-3xl"
-            alt="Pattern"
+            className="h-full w-full object-cover"
+            alt="Pattern background"
           />
         </div>
       </section>
