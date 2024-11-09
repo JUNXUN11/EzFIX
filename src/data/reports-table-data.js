@@ -67,7 +67,7 @@ export const reportsTableData = [
     blockno: "M21",
     roomno: "-",
     damagetype: "others",
-    description: "The washing machine in first floor is not functioning",
+    description: "The washing machine at first floor is not functioning",
     date: "14/09/20",
     status: "Not Fixed",
   },

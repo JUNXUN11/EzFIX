@@ -16,7 +16,6 @@ export function AdminReport() {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
   const [filterType, setFilterType] = useState("");
 
-  // Function to handle sorting
   const handleSort = (key) => {
     let direction = "asc";
     if (sortConfig.key === key && sortConfig.direction === "asc") {
@@ -25,7 +24,6 @@ export function AdminReport() {
     setSortConfig({ key, direction });
   };
 
-  // Function to get sorted data
   const sortedData = () => {
     let sortableItems = [...reportsTableData];
     if (sortConfig.key) {
@@ -42,7 +40,6 @@ export function AdminReport() {
     return sortableItems;
   };
 
-  // Function to filter data based on search term and damage type
   const filteredData = sortedData().filter((item) => {
     const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType ? item.damagetype === filterType : true;
@@ -170,14 +167,14 @@ export function AdminReport() {
                         </Typography>
                       </td>
                       <td className={className}>
-                          <Typography
-                            as="a"
-                            href="./view-reported-damage"
-                            className="text-xs font-semibold text-blue-gray-600"
-                          >
-                            View
-                          </Typography>
-                        </td>
+                        <Button
+                          variant="text"
+                          color="blue-gray"
+                          className="text-xs font-semibold"
+                        >
+                          View
+                        </Button>
+                      </td>
                     </tr>
                   );
                 }
