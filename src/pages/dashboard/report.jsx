@@ -5,41 +5,39 @@ import {
   CardBody,
   Typography,
   Chip,
-  IconButton,
+  Spinner,
   Tooltip,
+  IconButton,
 } from "@material-tailwind/react";
 import { EyeIcon } from "@heroicons/react/24/solid";
 
+
 const Report = () => {
   const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
 
-  // Hard code dulu
   useEffect(() => {
-    const dummyReports = [
-      {
-        id: '1',
-        name: 'Yuyu',
-        blockNumber: 'MA7',
-        roomNumber: '410',
-        category: 'electrical-damage',
-        description: 'Light bulb rosakkk!!!!!',
-        status: 'fixed',
-        dateSubmitted: '2024-03-15'
-      },
-      {
-        id: '2',
-        name: 'Yuyu',
-        blockNumber: 'MA7',
-        roomNumber: '410',
-        category: 'piping',
-        description: 'Water leakage in bathroom AHHHHHHH',
-        status: 'in-progress',
-        dateSubmitted: '2024-03-16'
-      }
-    ];
-    setReports(dummyReports);
+    fetchReports();
   }, []);
+
+  const fetchReports = async () => {
+    try {
+      const response = await fetch('http://localhost:8080/api/v1/reports');
+      if (!response.ok) {
+        throw new Error('Server ERROR!! Failed to load reports');
+      }
+      const data = await response.json();
+      console.log("Fetched reports:", data);
+      setReports(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching reports:', error);
+      setError('Failed to load reports. Please try again later.');
+      setLoading(false);
+    }
+  };
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -52,6 +50,41 @@ const Report = () => {
     };
     return colors[category] || 'gray';
   };
+  
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <Spinner className="h-12 w-12" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mt-12 mb-8">
+        <Card>
+          <CardBody className="text-center text-red-500">
+            {error}
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
+
+  if (reports.length === 0) {
+    return (
+      <div className="mt-12 mb-8">
+        <Card>
+          <CardBody className="text-center">
+            <Typography variant="h6" color="gray">
+              No reports submitted yet.
+            </Typography>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   const getStatusColor = (status) => {
     const colors = {
@@ -64,6 +97,7 @@ const Report = () => {
   };
 
   const formatCategory = (category) => {
+    if (!category) return "Unknown Category";
     return category.split('-').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
@@ -102,6 +136,7 @@ const Report = () => {
               </thead>
               <tbody>
                 {reports.map(({ id, name, blockNumber, roomNumber, category, status, dateSubmitted, description }, index) => {
+                  console.log("Category:", category);
                   const isLast = index === reports.length - 1;
                   const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 
