@@ -1,17 +1,17 @@
 import { chartsConfig } from "@/configs";
 
-const websiteViewsChart = {
+const weeklyReportSubmissionsChart = {
   type: "bar",
   height: 220,
   series: [
     {
-      name: "Views",
-      data: [50, 20, 10, 22, 50, 10, 40],
+      name: "Reports Submitted",
+      data: [30, 45, 20, 50, 60, 40, 70],
     },
   ],
   options: {
     ...chartsConfig,
-    colors: "#388e3c",
+    colors: "#A020F0",
     plotOptions: {
       bar: {
         columnWidth: "16%",
@@ -20,18 +20,18 @@ const websiteViewsChart = {
     },
     xaxis: {
       ...chartsConfig.xaxis,
-      categories: ["M", "T", "W", "T", "F", "S", "S"],
+      categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     },
   },
 };
 
-const dailySalesChart = {
+const weeklyResolutionTrendChart = {
   type: "line",
   height: 220,
   series: [
     {
-      name: "Sales",
-      data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
+      name: "Issues Resolved",
+      data: [10, 20, 35, 50, 40, 60, 80],
     },
   ],
   options: {
@@ -45,86 +45,25 @@ const dailySalesChart = {
     },
     xaxis: {
       ...chartsConfig.xaxis,
-      categories: [
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
+      categories: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     },
   },
-};
-
-const completedTaskChart = {
-  type: "line",
-  height: 220,
-  series: [
-    {
-      name: "Sales",
-      data: [50, 40, 300, 320, 500, 350, 200, 230, 500],
-    },
-  ],
-  options: {
-    ...chartsConfig,
-    colors: ["#388e3c"],
-    stroke: {
-      lineCap: "round",
-    },
-    markers: {
-      size: 5,
-    },
-    xaxis: {
-      ...chartsConfig.xaxis,
-      categories: [
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ],
-    },
-  },
-};
-const completedTasksChart = {
-  ...completedTaskChart,
-  series: [
-    {
-      name: "Tasks",
-      data: [50, 40, 300, 220, 500, 250, 400, 230, 500],
-    },
-  ],
 };
 
 export const statisticsChartsData = [
   {
     color: "white",
-    title: "Website View",
-    description: "Last Campaign Performance",
-    footer: "campaign sent 2 days ago",
-    chart: websiteViewsChart,
+    title: "Weekly Report Submissions",
+    description: "Submission trends over the week",
+    footer: "updated 2 days ago",
+    chart: weeklyReportSubmissionsChart,
   },
   {
     color: "white",
-    title: "Daily Sales",
-    description: "15% increase in today sales",
+    title: "Weekly Resolution Trend",
+    description: "Issues resolved over the week",
     footer: "updated 4 min ago",
-    chart: dailySalesChart,
-  },
-  {
-    color: "white",
-    title: "Completed Tasks",
-    description: "Last Campaign Performance",
-    footer: "just updated",
-    chart: completedTasksChart,
+    chart: weeklyResolutionTrendChart,
   },
 ];
 
