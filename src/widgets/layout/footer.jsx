@@ -42,7 +42,7 @@ Footer.defaultProps = {
   brandName: "TechSquad",
   routes: [
     { name: "About Us", path: "https://studentaffairs.utm.my/ktdi/" },
-    { name: "Report Issues" },
+    { name: "Report Issues",path:"" },
     { name: "Contact Us", path: "https://studentaffairs.utm.my/ktdi/hubungi-kami/" },
   ],
 };
