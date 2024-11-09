@@ -70,7 +70,7 @@ const CreateReport = () => {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <Card>
-        <CardHeader variant="gradient" color="blue" className="mb-8 p-6">
+      <CardHeader variant="gradient" color="gray" className="mb-8 p-6 flex justify-between items-center">
           <Typography variant="h6" color="white">
             Create A Report
           </Typography>
@@ -133,7 +133,7 @@ const CreateReport = () => {
               className="mt-4"
               type="submit"
               variant="gradient"
-              color="blue"
+              color="black"
               fullWidth
             >
               Submit 

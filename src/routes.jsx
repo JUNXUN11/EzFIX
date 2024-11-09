@@ -7,7 +7,8 @@ import {
   RectangleStackIcon,
   PencilSquareIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Report, AdminReport, Notifications } from "@/pages/dashboard";
+import { Home, Profile, AdminReport, Notifications } from "@/pages/dashboard";
+import Report from "./pages/dashboard/report";
 import CreateReport from "./pages/dashboard/CreateReport";
 import { SignIn, SignUp } from "@/pages/auth";
 
