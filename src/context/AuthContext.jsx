@@ -13,12 +13,28 @@ export const AuthProvider = ({ children }) => {
 
   const initAuth = async () => {
     try {
-      const currentUser = await authService.getCurrentUser();
-      if (currentUser) {
-        setUser(currentUser);
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (storedUser) {
+        setUser(storedUser); 
+        setLoading(false);
       } else {
-        await authService.refreshToken();
-        setUser(authService.getCurrentUser());
+        const currentUser = await authService.getCurrentUser();
+        if (currentUser) {
+          const user = {
+            _id: currentUser._id,
+            username: currentUser.username,
+            email: currentUser.email,
+            role: currentUser.role
+          };
+          setUser(user);
+          localStorage.setItem("user", JSON.stringify(user));
+        } else {
+          await authService.refreshToken();
+          const refreshedUser = authService.getCurrentUser();
+          setUser(refreshedUser);
+          localStorage.setItem("user", JSON.stringify(refreshedUser));
+        }
+        setLoading(false);
       }
     } catch (error) {
       navigate('/auth/sign-in');
@@ -33,9 +49,17 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (username, password) => {
     const data = await authService.login(username, password);
-    setUser(data.user);
+    const user = {
+      _id: data.user._id,
+      username: data.user.username,
+      email: data.user.email,
+      role: data.user.role
+    };
+    setUser(user);
+    localStorage.setItem("user", JSON.stringify(user)); 
     navigate('/dashboard/home');
   };
+  
 
   const register = async (username, email, password) => {
     try {
@@ -55,9 +79,10 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     authService.logout();
     setUser(null);
+    localStorage.removeItem("user"); 
     navigate('/auth/sign-in');
   };
-
+  
   return (
     <AuthContext.Provider
       value={{
