@@ -24,7 +24,7 @@ const Report = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/v1/reports');
+      const response = await fetch('https://theezfixapi.onrender.com/api/v1/reports');
       if (!response.ok) {
         throw new Error('Server ERROR!! Failed to load reports');
       }

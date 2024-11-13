@@ -11,11 +11,22 @@ import { useAuth } from "@/context/AuthContext";
 export function SignIn() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const { login, error, loading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { login, error } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await login(username, password);
+    if (!username || !password) return; // TODO: ADD ERROR HANDLING
+    
+    setIsLoading(true);
+    try {
+      const result = await login(username, password);
+      console.log('Login result:', result); 
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -89,12 +100,19 @@ export function SignIn() {
             )}
 
             <Button
-              className="mt-16 py-3 rounded-lg"
+              className="mt-16 py-3 rounded-lg relative flex items-center justify-center gap-2"
               fullWidth
               type="submit"
-              disabled={loading}
+              disabled={isLoading || !username || !password}
             >
-              {loading ? "Signing in..." : "Sign In"}
+              {isLoading ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Signing in...</span>
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
             <Typography
               variant="paragraph"
