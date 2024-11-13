@@ -2,8 +2,8 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { ClipLoader } from 'react-spinners';
 
-export function ProtectedRoute({ children }) {
-  const { isAuthenticated, loading } = useAuth();
+export function ProtectedRoute({ children, requiredRole }) {
+  const { isAuthenticated, user, loading } = useAuth();
 
   if (loading) {
     return (
@@ -17,5 +17,10 @@ export function ProtectedRoute({ children }) {
     return <Navigate to="/auth/sign-in" replace />;
   }
 
+  if (requiredRole && user && user.role !== requiredRole) {
+    return <Navigate to="/dashboard/home" replace />;
+  }
+
   return children;
 }
+

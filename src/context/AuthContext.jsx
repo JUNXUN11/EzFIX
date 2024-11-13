@@ -12,20 +12,18 @@ export const AuthProvider = ({ children }) => {
   const navigate = useNavigate();
 
   const initAuth = async () => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      setLoading(false);
-    } else {
-      try {
-        // Attempt to refresh the access token if there's a refresh token
+    try {
+      const currentUser = await authService.getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser); 
+      } else {
         await authService.refreshToken();
         setUser(authService.getCurrentUser());
-      } catch (error) {
-        navigate('/auth/sign-in');
-      } finally {
-        setLoading(false);
       }
+    } catch (error) {
+      navigate('/auth/sign-in');
+    } finally {
+      setLoading(false);
     }
   };
 
