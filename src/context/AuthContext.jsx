@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const currentUser = await authService.getCurrentUser();
       if (currentUser) {
-        setUser(currentUser); 
+        setUser(currentUser);
       } else {
         await authService.refreshToken();
         setUser(authService.getCurrentUser());
@@ -42,11 +42,11 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       setError(null);
       const data = await authService.register(username, email, password);
-      setUser({ token: data.accessToken, user: data.user });
-      navigate('/dashboard/home');
+      return { success: true, data };
     } catch (err) {
       setError(err.message);
       console.error('Registration failed:', err);
+      return { success: false, error: err.message };
     } finally {
       setLoading(false);
     }
@@ -67,6 +67,7 @@ export const AuthProvider = ({ children }) => {
         register,
         isAuthenticated: !!user,
         loading,
+        error,
       }}
     >
       {loading ? (

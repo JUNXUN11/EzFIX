@@ -16,7 +16,7 @@ const CreateReport = () => {
     type: 'success'
   });
 
-  const API_URL = 'http://localhost:8080/api/v1/reports';
+  const API_URL = 'https://theezfixapi.onrender.com/api/v1/reports';
 
   const handleChange = (e) => {
     const { name, value } = e.target;
