@@ -13,11 +13,22 @@ const AdminReport = () => {
   const [updateError, setUpdateError] = useState(null);
 
   const handleSort = (key) => {
+    // Convert key to match the actual data properties
+    const keyMap = {
+      'name': 'reportedBy',
+      'blockno': 'location',
+      'roomno': 'roomNo',
+      'damagetype': 'category',
+      'date': 'createdAt'
+    };
+    
+    const sortKey = keyMap[key.toLowerCase()] || key.toLowerCase();
+    
     let direction = "asc";
-    if (sortConfig.key === key && sortConfig.direction === "asc") {
+    if (sortConfig.key === sortKey && sortConfig.direction === "asc") {
       direction = "desc";
     }
-    setSortConfig({ key, direction });
+    setSortConfig({ key: sortKey, direction });
   };
 
   const sortedData = () => {
@@ -26,8 +37,18 @@ const AdminReport = () => {
     let sortableItems = [...reports];
     if (sortConfig.key) {
       sortableItems.sort((a, b) => {
-        const aValue = a[sortConfig.key] || '';
-        const bValue = b[sortConfig.key] || '';
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+        
+        // Handle dates
+        if (sortConfig.key === 'createdAt') {
+          aValue = new Date(aValue).getTime();
+          bValue = new Date(bValue).getTime();
+        } else {
+          // Convert to lowercase strings for other fields
+          aValue = String(aValue || '').toLowerCase();
+          bValue = String(bValue || '').toLowerCase();
+        }
         
         if (aValue < bValue) {
           return sortConfig.direction === "asc" ? -1 : 1;
@@ -44,7 +65,7 @@ const AdminReport = () => {
   const filteredData = () => {
     return sortedData().filter((item) => {
       const matchesSearch = item.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = filterType ? item.category?.toLowerCase() === filterType.toLowerCase() : true;
+      const matchesFilter = !filterType || item.category?.toLowerCase() === filterType.toLowerCase();
       return matchesSearch && matchesFilter;
     });
   };
@@ -55,7 +76,7 @@ const AdminReport = () => {
 
   const fetchReports = async () => {
     try {
-      const response = await fetch('http://localhost:8080/api/v1/reports');
+      const response = await fetch(' https://theezfixapi.onrender.com/api/v1/reports');
       if (!response.ok) {
         throw new Error('Server ERROR!! Failed to load reports');
       }
@@ -74,7 +95,7 @@ const AdminReport = () => {
     setUpdateError(null);
     
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/reports/${reportId}/status`, {
+      const response = await fetch(` https://theezfixapi.onrender.com/api/v1/reports/${reportId}/status`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -86,7 +107,6 @@ const AdminReport = () => {
         throw new Error('Failed to update status');
       }
 
-      // Update the reports state with the new status
       setReports(reports.map(report => 
         report.id === reportId ? { ...report, status: newStatus } : report
       ));
@@ -109,7 +129,7 @@ const AdminReport = () => {
       const colors = {
         fixed: "bg-green-100 text-green-800",
         "not fixed": "bg-red-100 text-red-800",
-        "in progress": "bg-yellow-100 text-yellow-800",
+        "in progress": "bg-orange-100 text-orange-800",
         pending: "bg-gray-100 text-gray-800"
       };
       return colors[status?.toLowerCase()] || colors.pending;
@@ -120,6 +140,20 @@ const AdminReport = () => {
         {status || 'Pending'}
       </span>
     );
+  };
+
+  const getCategoryColor = (category) => {
+    if (!category) return "bg-gray-100 text-gray-800";
+    
+    const colors = {
+      electrical: "bg-red-100 text-red-800",
+      civil: "bg-blue-100 text-blue-800",
+      piping: "bg-green-100 text-green-800",
+      sanitary: "bg-yellow-100 text-yellow-800",
+      "pest control": "bg-orange-100 text-orange-800"
+    };
+    
+    return colors[category.toLowerCase()] || "bg-gray-100 text-gray-800";
   };
 
   const ReportDetailsCard = ({ report, onClose }) => {
@@ -277,6 +311,7 @@ const AdminReport = () => {
               <option value="piping">Piping</option>
               <option value="sanitary">Sanitary</option>
               <option value="pest control">Pest Control</option>
+              <option value="other">Other</option>
             </select>
           </div>
         </div>
@@ -288,11 +323,11 @@ const AdminReport = () => {
                   <th
                     key={el}
                     className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
-                    onClick={() => handleSort(el.toLowerCase().replace(/ /g, ""))}
+                    onClick={() => handleSort(el.toLowerCase().replace(/[. ]/g, ""))}
                   >
                     <span className="text-xs font-bold uppercase text-gray-600">
                       {el}
-                      {sortConfig.key === el.toLowerCase().replace(/ /g, "") && (
+                      {sortConfig.key === el.toLowerCase().replace(/[. ]/g, "") && (
                         <span>{sortConfig.direction === "asc" ? " ▲" : " ▼"}</span>
                       )}
                     </span>
@@ -306,19 +341,8 @@ const AdminReport = () => {
                   index === reports.length - 1 ? "" : "border-b border-gray-200"
                 }`;
 
-                const getCategoryColor = (category) => {
-                  const colors = {
-                    electrical: "bg-red-100 text-red-800",
-                    civil: "bg-blue-100 text-blue-800",
-                    piping: "bg-green-100 text-green-800",
-                    sanitary: "bg-yellow-100 text-yellow-800",
-                    "pest control": "bg-orange-100 text-orange-800"
-                  };
-                  return colors[category?.toLowerCase()] || "bg-gray-100 text-gray-800";
-                };
-
                 return (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={report.id || index} className="hover:bg-gray-50">
                     <td className={className}>
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -345,7 +369,7 @@ const AdminReport = () => {
                     </td>
                     <td className={className}>
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
-                        {report.category}
+                        {report.category || 'Other'}
                       </span>
                     </td>
                     <td className={className}>
