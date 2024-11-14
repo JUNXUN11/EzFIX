@@ -5,9 +5,13 @@ import {
   InformationCircleIcon,
   ServerStackIcon,
   RectangleStackIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Report, AdminReport, Notifications } from "@/pages/dashboard";
+import { Home, Profile, AdminReport, Notifications } from "@/pages/dashboard";
+import Report from "./pages/dashboard/report";
+import CreateReport from "./pages/dashboard/CreateReport";
 import { SignIn, SignUp } from "@/pages/auth";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -21,43 +25,61 @@ export const routes = [
         icon: <HomeIcon {...icon} />,
         name: "dashboard",
         path: "/home",
-        element: <Home />,
+        element: (
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        ),
       },
       {
         icon: <TableCellsIcon {...icon} />,
         name: "Report",
         path: "/report",
-        element: <Report />,
+        element: (
+          <ProtectedRoute>
+            <Report />
+          </ProtectedRoute>
+        ),
       },
       {
         icon: <TableCellsIcon {...icon} />,
         name: "Admin Report",
         path: "/report-admin",
-        element: <AdminReport />,
+        element: (
+          <ProtectedRoute requiredRole="admin">
+            <AdminReport />
+          </ProtectedRoute>
+        ),
       },
       {
         icon: <InformationCircleIcon {...icon} />,
         name: "notifications",
         path: "/notifications",
-        element: <Notifications />,
+        element: (
+          <ProtectedRoute>
+            <Notifications />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        icon: <PencilSquareIcon {...icon} />,
+        name: "Create Report",
+        path: "/createreport",
+        element: (
+          <ProtectedRoute requiredRole="user">
+            <CreateReport />
+          </ProtectedRoute>
+        ),
       },
       {
         icon: <UserCircleIcon {...icon} />,
         name: "profile",
         path: "/profile",
-        element: <Profile />,
-      },
-    ],
-  },
-  {
-    title: "auth pages",
-    layout: "auth",
-    pages: [
-      {
-        icon: <UserCircleIcon {...icon} />,
-        name: "profile",
-        path: "/profile",
-        element: <Profile />,
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
       },
     ],
   },

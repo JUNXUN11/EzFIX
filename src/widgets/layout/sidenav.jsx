@@ -3,7 +3,6 @@ import PropTypes from "prop-types";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import {
-  Avatar,
   Button,
   IconButton,
   Typography,
@@ -13,13 +12,14 @@ import {
   DialogFooter,
 } from "@material-tailwind/react";
 import { useMaterialTailwindController, setOpenSidenav } from "@/context";
-
+import { useAuth } from "@/context/AuthContext"; 
 
 export function Sidenav({ brandImg, brandName, routes }) {
   const [controller, dispatch] = useMaterialTailwindController();
   const { sidenavColor, sidenavType, openSidenav } = controller;
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   const sidenavTypes = {
@@ -38,7 +38,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
     setIsLoggingOut(true);
     try {
-      const response = await fetch("http://localhost:8080/api/v1/users/logout", {
+      const response = await fetch("https://theezfixapi.onrender.com/api/v1/users/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -112,34 +112,38 @@ export function Sidenav({ brandImg, brandName, routes }) {
                       </Typography>
                     </li>
                   )}
-                  {pages.map(({ icon, name, path }) => (
-                    <li key={name}>
-                      <NavLink to={`/${layout}${path}`}>
-                        {({ isActive }) => (
-                          <Button
-                            variant={isActive ? "gradient" : "text"}
-                            color={
-                              isActive
-                                ? sidenavColor
-                                : sidenavType === "dark"
-                                ? "white"
-                                : "blue-gray"
-                            }
-                            className="flex items-center gap-4 px-4 capitalize"
-                            fullWidth
-                          >
-                            {icon}
-                            <Typography
-                              color="inherit"
-                              className="font-medium capitalize"
-                            >
-                              {name}
-                            </Typography>
-                          </Button>
-                        )}
-                      </NavLink>
-                    </li>
-                  ))}
+                {pages
+                .filter(({ name }) => {
+                  if (name === "Admin Report" && user?.role !== "admin") return false;
+                  if (name === "Create Report" && user?.role !== "user") return false;
+                  if (name === "Report" && user?.role !== "user") return false;
+                  return true;
+                })
+                .map(({ icon, name, path }) => (
+                  <li key={name}>
+                    <NavLink to={`/${layout}${path}`}>
+                      {({ isActive }) => (
+                        <Button
+                          variant={isActive ? "gradient" : "text"}
+                          color={
+                            isActive
+                              ? sidenavColor
+                              : sidenavType === "dark"
+                              ? "white"
+                              : "blue-gray"
+                          }
+                          className="flex items-center gap-4 px-4 capitalize"
+                          fullWidth
+                        >
+                          {icon}
+                          <Typography color="inherit" className="font-medium capitalize">
+                            {name}
+                          </Typography>
+                        </Button>
+                      )}
+                    </NavLink>
+                  </li>
+                ))}
                 </ul>
               ))}
           </div>

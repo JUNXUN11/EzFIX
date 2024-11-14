@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Card, CardHeader, CardBody, Input, Textarea, Button, Typography, Select, Option, Alert, AlertDescription, AlertTitle } from "@material-tailwind/react";
-import fs from 'fs';
-import path from 'path';
+import React, { useState } from 'react';
+import { Card, CardHeader, CardBody, Input, Textarea, Button, Typography, Select, Option } from "@material-tailwind/react";
+import axios from 'axios';
 
 const CreateReport = () => {
-  const [reports, setReports] = useState([]);
   const [report, setReport] = useState({
     name: '',
     blockNumber: '',
@@ -12,65 +10,90 @@ const CreateReport = () => {
     category: '',
     description: ''
   });
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showAlert, setShowAlert] = useState({
+    show: false,
+    message: '',
+    type: 'success'
+  });
 
-  useEffect(() => {
-    const fetchReports = async () => {
-      const loadedReports = await readReportsFromJson();
-      setReports(loadedReports);
-    };
-    fetchReports();
-  }, []);
-
-  const readReportsFromJson = async () => {
-    const filePath = path.join(__dirname, '..', 'reports.json');
-
-    try {
-      const data = await fs.promises.readFile(filePath, 'utf8');
-      return JSON.parse(data).reports || [];
-    } catch (error) {
-      console.error('Error reading reports:', error);
-      return [];
-    }
-  };
-
-  const saveReportsToJson = async (reports) => {
-    const filePath = path.join(__dirname, '..', 'reports.json');
-
-    try {
-      await fs.promises.writeFile(filePath, JSON.stringify({ reports }, null, 2));
-    } catch (error) {
-      console.error('Error saving reports:', error);
-      throw new Error('Failed to save reports');
-    }
-  };
+  const API_URL = 'https://theezfixapi.onrender.com/api/v1/reports';
 
   const handleChange = (e) => {
-    setReport({
-      ...report,
-      [e.target.name]: e.target.value,
+    const { name, value } = e.target;
+    setReport(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSelect = (value) => {
+    setReport(prev => ({
+      ...prev,
+      category: value
+    }));
+  };
+
+  const showAlertMessage = (message, type = 'success') => {
+    setShowAlert({
+      show: true,
+      message,
+      type
     });
+    setTimeout(() => {
+      setShowAlert({ show: false, message: '', type: 'success' });
+    }, 3000);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const updatedReports = [...reports, report];
-    setReports(updatedReports);
-
     try {
-      await saveReportsToJson(updatedReports);
-      setReport({ name: '', blockNumber: '', roomNumber: '', category: '', description: '' });
-      setShowSuccessAlert(true);
-      setTimeout(() => setShowSuccessAlert(false), 3000); // Hide the alert after 3 seconds
+      const response = await axios.post(API_URL, report);
+      console.log('Response:', response);
+      showAlertMessage('Report created successfully!');
+      setReport({
+        name: '',
+        blockNumber: '',
+        roomNumber: '',
+        category: '',
+        description: ''
+      });
     } catch (error) {
-      console.error('Error saving reports:', error);
+      console.error('Error creating report:', error);
+      showAlertMessage(
+        'Error creating report. Please ensure the server is running.',
+        'error'
+      );
     }
   };
 
   return (
-    <div className="mt-12 mb-8 flex flex-col gap-12">
+    <div className="mt-12 mb-8 flex flex-col gap-12 relative">
+      {showAlert.show && (
+        <div
+          role="alert"
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+            showAlert.type === 'success' 
+              ? 'bg-green-100 border border-green-400 text-green-700' 
+              : 'bg-red-100 border border-red-400 text-red-700'
+          }`}
+        >
+          <div className="flex items-center">
+            {showAlert.type === 'success' ? (
+              <svg aria-hidden="true" className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+              </svg>
+            ) : (
+              <svg aria-hidden="true" className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/>
+              </svg>
+            )}
+            <p>{showAlert.message}</p>
+          </div>
+        </div>
+      )}
+
       <Card>
-        <CardHeader variant="gradient" color="blue" className="mb-8 p-6">
+        <CardHeader variant="gradient" color="gray" className="mb-8 p-6">
           <Typography variant="h6" color="white">
             Create A Report
           </Typography>
@@ -78,39 +101,57 @@ const CreateReport = () => {
         <CardBody className="px-6 pt-0 pb-2">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="mb-4">
+              <label htmlFor="name" className="sr-only">Name</label>
               <Input
+                id="name"
                 type="text"
                 name="name"
                 label="Name"
                 value={report.name}
                 onChange={handleChange}
                 required
+                aria-label="Name"
               />
             </div>
             <div className="flex gap-4">
               <div className="mb-4 w-1/2">
+                <label htmlFor="blockNumber" className="sr-only">Block Number</label>
                 <Input
+                  id="blockNumber"
                   type="text"
                   name="blockNumber"
                   label="Block Number"
                   value={report.blockNumber}
                   onChange={handleChange}
                   required
+                  aria-label="Block Number"
                 />
               </div>
               <div className="mb-4 w-1/2">
+                <label htmlFor="roomNumber" className="sr-only">Room Number</label>
                 <Input
+                  id="roomNumber"
                   type="text"
                   name="roomNumber"
                   label="Room Number"
                   value={report.roomNumber}
                   onChange={handleChange}
                   required
+                  aria-label="Room Number"
                 />
               </div>
             </div>
             <div className="mb-4">
-              <Select name="category" label="Category" value={report.category} onChange={handleChange} required>
+              <label htmlFor="category" className="sr-only">Category</label>
+              <Select 
+                id="category"
+                name="category" 
+                label="Category" 
+                value={report.category} 
+                onChange={handleSelect}
+                required
+                aria-label="Category"
+              >
                 <Option value="">Select a Category</Option>
                 <Option value="electrical-damage">Electrical Damage</Option>
                 <Option value="civil-damage">Civil Damage</Option>
@@ -121,22 +162,26 @@ const CreateReport = () => {
               </Select>
             </div>
             <div className="mb-4">
+              <label htmlFor="description" className="sr-only">Description</label>
               <Textarea
+                id="description"
                 name="description"
                 label="Description"
                 value={report.description}
                 onChange={handleChange}
                 required
+                aria-label="Description"
               />
             </div>
             <Button
               className="mt-4"
               type="submit"
               variant="gradient"
-              color="blue"
+              color="black"
               fullWidth
+              aria-label="Submit Report"
             >
-              Submit 
+              Submit Report
             </Button>
           </form>
         </CardBody>
