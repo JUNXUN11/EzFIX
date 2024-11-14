@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8080/api/v1';
+const API_URL = 'https://theezfixapi.onrender.com/api/v1';
 
 export const authService = {
   async login(username, password) {

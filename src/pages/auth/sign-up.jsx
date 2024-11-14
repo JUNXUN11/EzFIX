@@ -1,31 +1,35 @@
 import { useState } from 'react';
-import {
-  Card,
-  Input,
-  Checkbox,
-  Button,
-  Typography,
-} from "@material-tailwind/react";
-import { Link } from "react-router-dom";
+import { Input, Button, Typography } from "@material-tailwind/react";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from '@/context/AuthContext';
-import { useNavigate } from 'react-router-dom';
 
 export function SignUp() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { register, error, loading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const { register, error } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
       return;
-      // TODO: add error handling
     }
-    await register(username, email, password);
-    navigate("/dashboard/home");
+
+    setIsLoading(true);
+    try {
+      const result = await register(username, email, password);
+      if (result.success) {
+        alert("Sign-up successful! Redirecting to login.");
+        navigate("/auth/sign-in", { replace: true });
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -146,13 +150,19 @@ export function SignUp() {
             )}
 
             <Button
-              className="mt-12 py-3 rounded-lg"
+              className="mt-12 py-3 rounded-lg relative flex items-center justify-center gap-2"
               fullWidth
               type="submit"
-              disabled={loading}
-              
+              disabled={isLoading || !username || !email || !password || !confirmPassword}
             >
-              {loading ? "Registering..." : "Register Now"}
+              {isLoading ? (
+                <>
+                  <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  <span>Registering...</span>
+                </>
+              ) : (
+                "Register Now"
+              )}
             </Button>
             <Typography
               variant="paragraph"

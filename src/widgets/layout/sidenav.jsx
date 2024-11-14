@@ -38,7 +38,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
     setIsLoggingOut(true);
     try {
-      const response = await fetch("http://localhost:8080/api/v1/users/logout", {
+      const response = await fetch("https://theezfixapi.onrender.com/api/v1/users/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
