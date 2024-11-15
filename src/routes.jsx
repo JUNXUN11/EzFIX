@@ -72,12 +72,6 @@ export const routes = [
         ),
       },
       {
-        icon: <PencilSquareIcon {...icon} />,
-        name: "Create Report",
-        path: "/createreport",
-        element: <CreateReport />,
-      },
-      {
         icon: <UserCircleIcon {...icon} />,
         name: "profile",
         path: "/profile",

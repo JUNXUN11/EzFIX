@@ -4,12 +4,13 @@ import axios from 'axios';
 
 const CreateReport = () => {
   const [report, setReport] = useState({
-    name: '',
-    blockNumber: '',
-    roomNumber: '',
+    studentId: '',          // Changed from 'name' to 'studentId'
+    location: '',            // Changed from 'blockNumber' to 'location'
+    roomNo: '',              // Changed from 'roomNumber' to 'roomNo'
     category: '',
     description: ''
   });
+
   const [showAlert, setShowAlert] = useState({
     show: false,
     message: '',
@@ -51,9 +52,9 @@ const CreateReport = () => {
       console.log('Response:', response);
       showAlertMessage('Report created successfully!');
       setReport({
-        name: '',
-        blockNumber: '',
-        roomNumber: '',
+        studentId: '',
+        location: '',
+        roomNo: '',
         category: '',
         description: ''
       });
@@ -101,40 +102,40 @@ const CreateReport = () => {
         <CardBody className="px-6 pt-0 pb-2">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="mb-4">
-              <label htmlFor="name" className="sr-only">Name</label>
+              <label htmlFor="studentId" className="sr-only">Student ID</label>
               <Input
-                id="name"
+                id="studentId"
                 type="text"
-                name="name"
-                label="Name"
-                value={report.name}
+                name="studentId"
+                label="Student ID"
+                value={report.studentId}
                 onChange={handleChange}
                 required
-                aria-label="Name"
+                aria-label="Student ID"
               />
             </div>
             <div className="flex gap-4">
               <div className="mb-4 w-1/2">
-                <label htmlFor="blockNumber" className="sr-only">Block Number</label>
+                <label htmlFor="location" className="sr-only">Location</label>
                 <Input
-                  id="blockNumber"
+                  id="location"
                   type="text"
-                  name="blockNumber"
+                  name="location"
                   label="Block Number"
-                  value={report.blockNumber}
+                  value={report.location}
                   onChange={handleChange}
                   required
-                  aria-label="Block Number"
+                  aria-label="Location"
                 />
               </div>
               <div className="mb-4 w-1/2">
-                <label htmlFor="roomNumber" className="sr-only">Room Number</label>
+                <label htmlFor="roomNo" className="sr-only">Room Number</label>
                 <Input
-                  id="roomNumber"
+                  id="roomNo"
                   type="text"
-                  name="roomNumber"
+                  name="roomNo"
                   label="Room Number"
-                  value={report.roomNumber}
+                  value={report.roomNo}
                   onChange={handleChange}
                   required
                   aria-label="Room Number"

@@ -28,8 +28,8 @@ const Report = () => {
       if (!response.ok) {
         throw new Error('Server ERROR!! Failed to load reports');
       }
-      const data = await response.json();
-      console.log("Fetched reports:", data);
+    const data = await response.json();
+      console.log("Fetched reports for current user:", data);
       setReports(data);
       setLoading(false);
     } catch (error) {
@@ -88,10 +88,9 @@ const Report = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      'pending': 'yellow',
-      'in-progress': 'blue',
-      'completed': 'green',
-      'rejected': 'red'
+      'Fixed': 'green',
+      'In-progress': 'orange',
+      'Not Fixed': 'red',
     };
     return colors[status] || 'gray';
   };
@@ -115,7 +114,7 @@ const Report = () => {
           {reports.length === 0 ? (
             <div className="flex justify-center items-center p-6">
               <Typography variant="h6" color="blue-gray">
-                No reports submitted yet
+                No reports submitted yet.
               </Typography>
             </div>
           ) : (
@@ -136,7 +135,6 @@ const Report = () => {
               </thead>
               <tbody>
                 {reports.map(({ id, name, blockNumber, roomNumber, category, status, dateSubmitted, description }, index) => {
-                  console.log("Category:", category);
                   const isLast = index === reports.length - 1;
                   const classes = isLast ? "p-4" : "p-4 border-b border-blue-gray-50";
 
