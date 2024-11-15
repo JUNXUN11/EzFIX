@@ -146,8 +146,8 @@ const AdminReport = () => {
     if (!category) return "bg-gray-100 text-gray-800";
     
     const colors = {
-      electrical: "bg-red-100 text-red-800",
-      civil: "bg-blue-100 text-blue-800",
+      "electrical damage": "bg-red-100 text-red-800",
+      "civil damage": "bg-blue-100 text-blue-800",
       piping: "bg-green-100 text-green-800",
       sanitary: "bg-yellow-100 text-yellow-800",
       "pest control": "bg-orange-100 text-orange-800"
@@ -169,7 +169,6 @@ const AdminReport = () => {
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6 space-y-6">
-            {/* Header */}
             <div className="flex justify-between items-start">
               <h2 className="text-2xl font-bold text-gray-900">Report Details</h2>
               <button 
@@ -288,8 +287,8 @@ const AdminReport = () => {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <div className="bg-white rounded-lg shadow-md">
-        <div className="mb-8 p-6 bg-gray-100 rounded-t-lg flex justify-between items-center">
-          <h6 className="text-lg font-semibold">
+      <div className="mb-8 p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 rounded-t-lg flex justify-between items-center">
+          <h6 className="text-white text-lg font-semibold">
             Reported Damages
           </h6>
           <div className="flex gap-4">
@@ -306,8 +305,8 @@ const AdminReport = () => {
               className="text-sm py-1.5 px-3 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Damage Types</option>
-              <option value="electrical">Electrical</option>
-              <option value="civil">Civil</option>
+              <option value="electrical damage">Electrical</option>
+              <option value="civil damage">Civil</option>
               <option value="piping">Piping</option>
               <option value="sanitary">Sanitary</option>
               <option value="pest control">Pest Control</option>
