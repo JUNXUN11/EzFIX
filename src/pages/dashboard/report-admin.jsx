@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { EyeIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
+const Toast = ({ message, type, onClose }) => {
+  return (
+    <div className={`fixed bottom-4 right-4 z-50 rounded-lg shadow-lg p-4 ${
+      type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white flex items-center gap-2`}>
+      <span>{message}</span>
+      <button onClick={onClose} className="hover:opacity-80">
+        <XMarkIcon className="h-5 w-5" />
+      </button>
+    </div>
+  );
+};
+
 const AdminReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -11,6 +24,7 @@ const AdminReport = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const handleSort = (key) => {
     // Convert key to match the actual data properties
@@ -90,12 +104,20 @@ const AdminReport = () => {
     }
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 3000);
+  };
+
   const handleStatusUpdate = async (reportId, newStatus) => {
     setIsUpdating(true);
     setUpdateError(null);
     
     try {
-      const response = await fetch(` https://theezfixapi.onrender.com/api/v1/reports/${reportId}/status`, {
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -107,18 +129,24 @@ const AdminReport = () => {
         throw new Error('Failed to update status');
       }
 
+      const updatedReport = await response.json();
+
+      // Update local state
       setReports(reports.map(report => 
-        report.id === reportId ? { ...report, status: newStatus } : report
+        report._id === reportId ? { ...report, status: newStatus } : report
       ));
 
-      // Update the selected report if it's currently being viewed
-      if (selectedReport?.id === reportId) {
+      // Update selected report if it's being viewed
+      if (selectedReport?._id === reportId) {
         setSelectedReport({ ...selectedReport, status: newStatus });
       }
+
+      showToast('Status updated successfully', 'success');
 
     } catch (error) {
       console.error('Error updating status:', error);
       setUpdateError('Failed to update status. Please try again.');
+      showToast('Failed to update status', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -155,6 +183,8 @@ const AdminReport = () => {
     
     return colors[category.toLowerCase()] || "bg-gray-100 text-gray-800";
   };
+
+
 
   const ReportDetailsCard = ({ report, onClose }) => {
     if (!report) return null;
@@ -404,6 +434,13 @@ const AdminReport = () => {
         <ReportDetailsCard
           report={selectedReport}
           onClose={() => setSelectedReport(null)}
+        />
+      )}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'success' })}
         />
       )}
     </div>
