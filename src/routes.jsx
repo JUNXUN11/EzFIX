@@ -12,6 +12,8 @@ import Report from "./pages/dashboard/report";
 import CreateReport from "./pages/dashboard/CreateReport";
 import { SignIn, SignUp } from "@/pages/auth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import UserHome from "@/pages/dashboard/UserHome"; // Import the new UserHome component
+
 
 const icon = {
   className: "w-5 h-5 text-inherit",
@@ -28,6 +30,16 @@ export const routes = [
         element: (
           <ProtectedRoute>
             <Home />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        icon: <HomeIcon {...icon} />,
+        name: "User dashboard",
+        path: "/User-home",
+        element: (
+          <ProtectedRoute>
+            <UserHome />
           </ProtectedRoute>
         ),
       },
