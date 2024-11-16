@@ -4,7 +4,6 @@ import { StatisticsChart } from "@/widgets/charts";
 import { useStatisticsCardsData, useStatisticsChartsData } from "@/data";
 import { ClockIcon } from "@heroicons/react/24/solid";
 import { useStatisticsCategoriesData } from "@/data/statistics-categories-data";
-
 export function Home() {
   const statisticsChartsData = useStatisticsChartsData();
   const statisticsCardsData = useStatisticsCardsData();
