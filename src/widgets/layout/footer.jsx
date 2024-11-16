@@ -16,7 +16,7 @@ export function Footer({ brandName, brandLink, routes }) {
           >
             {brandName}
           </a>{" "}
-          -"Report with Ease, Rest with Peace."
+          - "Report with Ease, Rest with Peace."
         </Typography>
         <ul className="flex items-center gap-4">
           {routes.map(({ name, path }) => (
