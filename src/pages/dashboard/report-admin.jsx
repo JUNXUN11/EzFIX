@@ -192,7 +192,8 @@ const AdminReport = () => {
     const statusOptions = [
       { value: "in progress", label: "In Progress" },
       { value: "fixed", label: "Fixed" },
-      { value: "not fixed", label: "Not Fixed" }
+      { value: "not fixed", label: "Not Fixed" },
+      { value: "pending", label: "Pending" }
     ];
 
     return (
