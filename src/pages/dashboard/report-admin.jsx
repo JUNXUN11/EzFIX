@@ -86,6 +86,12 @@ const AdminReport = () => {
 
   useEffect(() => {
     fetchReports();
+    
+    const intervalId = setInterval(() => {
+      fetchReports();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchReports = async () => {
@@ -113,6 +119,7 @@ const AdminReport = () => {
   };
 
   const handleStatusUpdate = async (reportId, newStatus) => {
+    console.log('Updating report:', reportId, 'with status:', newStatus);
     setIsUpdating(true);
     setUpdateError(null);
     
@@ -130,15 +137,22 @@ const AdminReport = () => {
       }
 
       const updatedReport = await response.json();
+      console.log('Response from server:', updatedReport);
 
-      // Update local state
-      setReports(reports.map(report => 
-        report._id === reportId ? { ...report, status: newStatus } : report
-      ));
+      setReports(prevReports => {
+        const newReports = prevReports.map(report => 
+          report._id === reportId ? { ...report, status: newStatus } : report
+        );
+        console.log('Updated reports:', newReports); // Add this
+        return newReports;
+      });
 
-      // Update selected report if it's being viewed
-      if (selectedReport?._id === reportId) {
-        setSelectedReport({ ...selectedReport, status: newStatus });
+      if (selectedReport?.id === reportId) {
+        setSelectedReport(currentReport => ({
+          ...currentReport,
+          status: newStatus,
+          updatedAt: new Date().toISOString() // Update the timestamp
+        }));
       }
 
       showToast('Status updated successfully', 'success');
@@ -152,7 +166,7 @@ const AdminReport = () => {
     }
   };
 
-  const StatusBadge = ({ status }) => {
+  const StatusBadge = React.memo(({ status }) => {
     const getStatusColor = (status) => {
       const colors = {
         fixed: "bg-green-100 text-green-800",
@@ -163,12 +177,25 @@ const AdminReport = () => {
       return colors[status?.toLowerCase()] || colors.pending;
     };
 
+    const formatStatus = (status) => {
+      if (!status) return 'Pending';
+      
+      // Split by spaces and capitalize each word
+      return status
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    };
+  
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
-        {status || 'Pending'}
+      <span 
+        key={`status-${status}`} 
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
+      >
+        {formatStatus(status)}
       </span>
     );
-  };
+  });
 
   const getCategoryColor = (category) => {
     if (!category) return "bg-gray-100 text-gray-800";
@@ -184,9 +211,13 @@ const AdminReport = () => {
     return colors[category.toLowerCase()] || "bg-gray-100 text-gray-800";
   };
 
-
-
   const ReportDetailsCard = ({ report, onClose }) => {
+    const [currentStatus, setCurrentStatus] = useState(report.status);
+
+    useEffect(() => {
+      setCurrentStatus(report.status);
+    }, [report.status]);
+
     if (!report) return null;
 
     const statusOptions = [
@@ -195,6 +226,12 @@ const AdminReport = () => {
       { value: "not fixed", label: "Not Fixed" },
       { value: "pending", label: "Pending" }
     ];
+
+    const handleChange = (e) => {
+      const newStatus = e.target.value;
+      handleStatusUpdate(report.id, newStatus);
+      setCurrentStatus(newStatus);
+    };
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -240,7 +277,7 @@ const AdminReport = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Current Status</p>
-                  <StatusBadge status={report.status} />
+                  <StatusBadge status={currentStatus} />
                 </div>
               </div>
 
@@ -252,22 +289,22 @@ const AdminReport = () => {
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-3">Update Status</p>
                 <div className="flex flex-col gap-2">
-                  <select
-                    value={report.status || 'pending'}
-                    onChange={(e) => handleStatusUpdate(report.id, e.target.value)}
-                    disabled={isUpdating}
-                    className="w-full px-4 py-2 border rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {statusOptions.map((option) => (
-                      <option 
-                        key={option.value} 
-                        value={option.value}
-                        disabled={option.value === report.status}
-                      >
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                <select
+                  value={currentStatus || 'pending'}
+                  onChange={handleChange}
+                  disabled={isUpdating}
+                  className="w-full px-4 py-2 border rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {statusOptions.map((option) => (
+                    <option 
+                      key={option.value} 
+                      value={option.value}
+                      disabled={option.value === currentStatus}
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                   {isUpdating && (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
@@ -372,7 +409,7 @@ const AdminReport = () => {
                 }`;
 
                 return (
-                  <tr key={report.id || index} className="hover:bg-gray-50">
+                  <tr key={report.id} className="hover:bg-gray-50">
                     <td className={className}>
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
