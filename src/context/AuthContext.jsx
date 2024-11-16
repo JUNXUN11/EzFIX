@@ -1,7 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { authService } from '@/services/authService';
-import { ClipLoader } from 'react-spinners';
+import { createContext, useContext, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { authService } from "@/services/authService";
+import { ClipLoader } from "react-spinners";
 
 const AuthContext = createContext(null);
 
@@ -13,53 +13,70 @@ export const AuthProvider = ({ children }) => {
 
   const initAuth = async () => {
     try {
-      const storedUser = JSON.parse(localStorage.getItem("user"));
-      if (storedUser) {
-        setUser(storedUser); 
-        setLoading(false);
+      const storedUser = JSON.parse(sessionStorage.getItem("user"));
+      const accessToken = sessionStorage.getItem("accessToken");
+  
+      if (storedUser && accessToken) {
+        setUser({
+          ...storedUser,
+          id: storedUser.id || storedUser._id, 
+        });
       } else {
         const currentUser = await authService.getCurrentUser();
         if (currentUser) {
           const user = {
-            _id: currentUser._id,
+            id: currentUser.id || currentUser._id,
             username: currentUser.username,
             email: currentUser.email,
-            role: currentUser.role
+            role: currentUser.role,
           };
           setUser(user);
-          localStorage.setItem("user", JSON.stringify(user));
+          sessionStorage.setItem("user", JSON.stringify(user));
         } else {
           await authService.refreshToken();
-          const refreshedUser = authService.getCurrentUser();
-          setUser(refreshedUser);
-          localStorage.setItem("user", JSON.stringify(refreshedUser));
+          const refreshedUser = await authService.getCurrentUser();
+          const user = {
+            id: refreshedUser.user.id || refreshedUser.user._id,
+            username: refreshedUser.user.username,
+            email: refreshedUser.user.email,
+            role: refreshedUser.user.role,
+          };
+          setUser(user);
+          sessionStorage.setItem("user", JSON.stringify(user));
         }
-        setLoading(false);
       }
     } catch (error) {
-      navigate('/auth/sign-in');
+      navigate("/auth/sign-in");
     } finally {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     initAuth();
   }, []);
+  
 
   const login = async (username, password) => {
-    const data = await authService.login(username, password);
-    const user = {
-      _id: data.user._id,
-      username: data.user.username,
-      email: data.user.email,
-      role: data.user.role
-    };
-    setUser(user);
-    localStorage.setItem("user", JSON.stringify(user)); 
-    navigate('/dashboard/home');
+    try {
+      setLoading(true);
+      const data = await authService.login(username, password);
+      const user = {
+        id: data.user.id || data.user._id,
+        username: data.user.username,
+        email: data.user.email,
+        role: data.user.role,
+      };
+      setUser(user);
+      sessionStorage.setItem("user", JSON.stringify(user));
+      navigate("/dashboard/home");
+    } catch (error) {
+      setError(error.message || "Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
-  
 
   const register = async (username, email, password) => {
     try {
@@ -68,8 +85,7 @@ export const AuthProvider = ({ children }) => {
       const data = await authService.register(username, email, password);
       return { success: true, data };
     } catch (err) {
-      setError(err.message);
-      console.error('Registration failed:', err);
+      setError(err.message || "Registration failed");
       return { success: false, error: err.message };
     } finally {
       setLoading(false);
@@ -79,10 +95,12 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     authService.logout();
     setUser(null);
-    localStorage.removeItem("user"); 
-    navigate('/auth/sign-in');
+    sessionStorage.removeItem("user");
+    sessionStorage.removeItem("accessToken");
+    sessionStorage.removeItem("refreshToken");
+    navigate("/auth/sign-in");
   };
-  
+
   return (
     <AuthContext.Provider
       value={{
@@ -98,10 +116,10 @@ export const AuthProvider = ({ children }) => {
       {loading ? (
         <div
           style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            height: '100vh',
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
           }}
         >
           <ClipLoader size={50} color="#123abc" loading={loading} />
