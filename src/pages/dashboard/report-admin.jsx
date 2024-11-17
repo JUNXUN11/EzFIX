@@ -1,6 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { EyeIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
+const Toast = ({ message, type, onClose }) => {
+  return (
+    <div className={`fixed bottom-4 right-4 z-50 rounded-lg shadow-lg p-4 ${
+      type === 'success' ? 'bg-green-500' : 'bg-red-500'
+    } text-white flex items-center gap-2`}>
+      <span>{message}</span>
+      <button onClick={onClose} className="hover:opacity-80">
+        <XMarkIcon className="h-5 w-5" />
+      </button>
+    </div>
+  );
+};
+
 const AdminReport = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
@@ -11,6 +24,7 @@ const AdminReport = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const handleSort = (key) => {
     // Convert key to match the actual data properties
@@ -72,11 +86,17 @@ const AdminReport = () => {
 
   useEffect(() => {
     fetchReports();
+    
+    const intervalId = setInterval(() => {
+      fetchReports();
+    }, 5000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const fetchReports = async () => {
     try {
-      const response = await fetch(' https://theezfixapi.onrender.com/api/v1/reports');
+      const response = await fetch('https://theezfixapi.onrender.com/api/v1/reports');
       if (!response.ok) {
         throw new Error('Server ERROR!! Failed to load reports');
       }
@@ -90,12 +110,21 @@ const AdminReport = () => {
     }
   };
 
+  const showToast = (message, type = 'success') => {
+    setToast({ show: true, message, type });
+    // Auto hide after 3 seconds
+    setTimeout(() => {
+      setToast({ show: false, message: '', type: 'success' });
+    }, 3000);
+  };
+
   const handleStatusUpdate = async (reportId, newStatus) => {
+    console.log('Updating report:', reportId, 'with status:', newStatus);
     setIsUpdating(true);
     setUpdateError(null);
     
     try {
-      const response = await fetch(` https://theezfixapi.onrender.com/api/v1/reports/${reportId}/status`, {
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -107,24 +136,37 @@ const AdminReport = () => {
         throw new Error('Failed to update status');
       }
 
-      setReports(reports.map(report => 
-        report.id === reportId ? { ...report, status: newStatus } : report
-      ));
+      const updatedReport = await response.json();
+      console.log('Response from server:', updatedReport);
 
-      // Update the selected report if it's currently being viewed
+      setReports(prevReports => {
+        const newReports = prevReports.map(report => 
+          report._id === reportId ? { ...report, status: newStatus } : report
+        );
+        console.log('Updated reports:', newReports); // Add this
+        return newReports;
+      });
+
       if (selectedReport?.id === reportId) {
-        setSelectedReport({ ...selectedReport, status: newStatus });
+        setSelectedReport(currentReport => ({
+          ...currentReport,
+          status: newStatus,
+          updatedAt: new Date().toISOString() // Update the timestamp
+        }));
       }
+
+      showToast('Status updated successfully', 'success');
 
     } catch (error) {
       console.error('Error updating status:', error);
       setUpdateError('Failed to update status. Please try again.');
+      showToast('Failed to update status', 'error');
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const StatusBadge = ({ status }) => {
+  const StatusBadge = React.memo(({ status }) => {
     const getStatusColor = (status) => {
       const colors = {
         fixed: "bg-green-100 text-green-800",
@@ -135,19 +177,32 @@ const AdminReport = () => {
       return colors[status?.toLowerCase()] || colors.pending;
     };
 
+    const formatStatus = (status) => {
+      if (!status) return 'Pending';
+      
+      // Split by spaces and capitalize each word
+      return status
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    };
+  
     return (
-      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}>
-        {status || 'Pending'}
+      <span 
+        key={`status-${status}`} 
+        className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusColor(status)}`}
+      >
+        {formatStatus(status)}
       </span>
     );
-  };
+  });
 
   const getCategoryColor = (category) => {
     if (!category) return "bg-gray-100 text-gray-800";
     
     const colors = {
-      electrical: "bg-red-100 text-red-800",
-      civil: "bg-blue-100 text-blue-800",
+      "electrical damage": "bg-red-100 text-red-800",
+      "civil damage": "bg-blue-100 text-blue-800",
       piping: "bg-green-100 text-green-800",
       sanitary: "bg-yellow-100 text-yellow-800",
       "pest control": "bg-orange-100 text-orange-800"
@@ -157,19 +212,31 @@ const AdminReport = () => {
   };
 
   const ReportDetailsCard = ({ report, onClose }) => {
+    const [currentStatus, setCurrentStatus] = useState(report.status);
+
+    useEffect(() => {
+      setCurrentStatus(report.status);
+    }, [report.status]);
+
     if (!report) return null;
 
     const statusOptions = [
       { value: "in progress", label: "In Progress" },
       { value: "fixed", label: "Fixed" },
-      { value: "not fixed", label: "Not Fixed" }
+      { value: "not fixed", label: "Not Fixed" },
+      { value: "pending", label: "Pending" }
     ];
+
+    const handleChange = (e) => {
+      const newStatus = e.target.value;
+      handleStatusUpdate(report.id, newStatus);
+      setCurrentStatus(newStatus);
+    };
 
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           <div className="p-6 space-y-6">
-            {/* Header */}
             <div className="flex justify-between items-start">
               <h2 className="text-2xl font-bold text-gray-900">Report Details</h2>
               <button 
@@ -210,7 +277,7 @@ const AdminReport = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Current Status</p>
-                  <StatusBadge status={report.status} />
+                  <StatusBadge status={currentStatus} />
                 </div>
               </div>
 
@@ -222,22 +289,22 @@ const AdminReport = () => {
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-3">Update Status</p>
                 <div className="flex flex-col gap-2">
-                  <select
-                    value={report.status || 'pending'}
-                    onChange={(e) => handleStatusUpdate(report.id, e.target.value)}
-                    disabled={isUpdating}
-                    className="w-full px-4 py-2 border rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {statusOptions.map((option) => (
-                      <option 
-                        key={option.value} 
-                        value={option.value}
-                        disabled={option.value === report.status}
-                      >
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
+                <select
+                  value={currentStatus || 'pending'}
+                  onChange={handleChange}
+                  disabled={isUpdating}
+                  className="w-full px-4 py-2 border rounded-lg bg-white text-gray-800 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {statusOptions.map((option) => (
+                    <option 
+                      key={option.value} 
+                      value={option.value}
+                      disabled={option.value === currentStatus}
+                    >
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                   {isUpdating && (
                     <div className="flex items-center justify-center">
                       <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
@@ -288,8 +355,8 @@ const AdminReport = () => {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <div className="bg-white rounded-lg shadow-md">
-        <div className="mb-8 p-6 bg-gray-100 rounded-t-lg flex justify-between items-center">
-          <h6 className="text-lg font-semibold">
+      <div className="mb-8 p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 rounded-t-lg flex justify-between items-center">
+          <h6 className="text-white text-lg font-semibold">
             Reported Damages
           </h6>
           <div className="flex gap-4">
@@ -306,8 +373,8 @@ const AdminReport = () => {
               className="text-sm py-1.5 px-3 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Damage Types</option>
-              <option value="electrical">Electrical</option>
-              <option value="civil">Civil</option>
+              <option value="electrical damage">Electrical</option>
+              <option value="civil damage">Civil</option>
               <option value="piping">Piping</option>
               <option value="sanitary">Sanitary</option>
               <option value="pest control">Pest Control</option>
@@ -342,7 +409,7 @@ const AdminReport = () => {
                 }`;
 
                 return (
-                  <tr key={report.id || index} className="hover:bg-gray-50">
+                  <tr key={report.id} className="hover:bg-gray-50">
                     <td className={className}>
                       <div className="flex items-center gap-4">
                         <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -405,6 +472,13 @@ const AdminReport = () => {
         <ReportDetailsCard
           report={selectedReport}
           onClose={() => setSelectedReport(null)}
+        />
+      )}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast({ show: false, message: '', type: 'success' })}
         />
       )}
     </div>
