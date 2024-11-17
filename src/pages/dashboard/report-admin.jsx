@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { EyeIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
+const AdminReport = () => {
+import React, { useState, useEffect } from 'react';
+import { EyeIcon, XMarkIcon } from "@heroicons/react/24/solid";
+
 const Toast = ({ message, type, onClose }) => {
   return (
     <div className={`fixed bottom-4 right-4 z-50 rounded-lg shadow-lg p-4 ${
@@ -24,6 +28,13 @@ const AdminReport = () => {
   const [selectedReport, setSelectedReport] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
+
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedReport, setSelectedReport] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateError, setUpdateError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const handleSort = (key) => {
@@ -38,14 +49,30 @@ const AdminReport = () => {
     
     const sortKey = keyMap[key.toLowerCase()] || key.toLowerCase();
     
+    // Convert key to match the actual data properties
+    const keyMap = {
+      'name': 'reportedBy',
+      'blockno': 'location',
+      'roomno': 'roomNo',
+      'damagetype': 'category',
+      'date': 'createdAt'
+    };
+    
+    const sortKey = keyMap[key.toLowerCase()] || key.toLowerCase();
+    
     let direction = "asc";
+    if (sortConfig.key === sortKey && sortConfig.direction === "asc") {
     if (sortConfig.key === sortKey && sortConfig.direction === "asc") {
       direction = "desc";
     }
     setSortConfig({ key: sortKey, direction });
+    setSortConfig({ key: sortKey, direction });
   };
 
   const sortedData = () => {
+    if (!reports.length) return [];
+    
+    let sortableItems = [...reports];
     if (!reports.length) return [];
     
     let sortableItems = [...reports];
@@ -65,8 +92,23 @@ const AdminReport = () => {
         }
         
         if (aValue < bValue) {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+        
+        // Handle dates
+        if (sortConfig.key === 'createdAt') {
+          aValue = new Date(aValue).getTime();
+          bValue = new Date(bValue).getTime();
+        } else {
+          // Convert to lowercase strings for other fields
+          aValue = String(aValue || '').toLowerCase();
+          bValue = String(bValue || '').toLowerCase();
+        }
+        
+        if (aValue < bValue) {
           return sortConfig.direction === "asc" ? -1 : 1;
         }
+        if (aValue > bValue) {
         if (aValue > bValue) {
           return sortConfig.direction === "asc" ? 1 : -1;
         }
@@ -355,21 +397,28 @@ const AdminReport = () => {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <div className="bg-white rounded-lg shadow-md">
+        <div className="mb-8 p-6 bg-gray-100 rounded-t-lg flex justify-between items-center">
+          <h6 className="text-lg font-semibold">
+      <div className="bg-white rounded-lg shadow-md">
       <div className="mb-8 p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 rounded-t-lg flex justify-between items-center">
           <h6 className="text-white text-lg font-semibold">
             Reported Damages
           </h6>
+          </h6>
           <div className="flex gap-4">
+            <input
             <input
               type="text"
               placeholder="Search by name"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-40 px-3 py-1.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-40 px-3 py-1.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
+              className="text-sm py-1.5 px-3 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               className="text-sm py-1.5 px-3 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Damage Types</option>
@@ -379,21 +428,32 @@ const AdminReport = () => {
               <option value="sanitary">Sanitary</option>
               <option value="pest control">Pest Control</option>
               <option value="other">Other</option>
+              <option value="other">Other</option>
             </select>
           </div>
+        </div>
+        <div className="overflow-x-auto px-0 pt-0 pb-2">
         </div>
         <div className="overflow-x-auto px-0 pt-0 pb-2">
           <table className="w-full min-w-[640px] table-auto">
             <thead>
               <tr>
                 {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Status", "Actions"].map((el) => (
+                {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Status", "Actions"].map((el) => (
                   <th
                     key={el}
                     className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
                     onClick={() => handleSort(el.toLowerCase().replace(/[. ]/g, ""))}
+                    className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
+                    onClick={() => handleSort(el.toLowerCase().replace(/[. ]/g, ""))}
                   >
                     <span className="text-xs font-bold uppercase text-gray-600">
+                    <span className="text-xs font-bold uppercase text-gray-600">
                       {el}
+                      {sortConfig.key === el.toLowerCase().replace(/[. ]/g, "") && (
+                        <span>{sortConfig.direction === "asc" ? " ▲" : " ▼"}</span>
+                      )}
+                    </span>
                       {sortConfig.key === el.toLowerCase().replace(/[. ]/g, "") && (
                         <span>{sortConfig.direction === "asc" ? " ▲" : " ▼"}</span>
                       )}
@@ -407,7 +467,24 @@ const AdminReport = () => {
                 const className = `py-3 px-5 ${
                   index === reports.length - 1 ? "" : "border-b border-gray-200"
                 }`;
+              {filteredData().map((report, index) => {
+                const className = `py-3 px-5 ${
+                  index === reports.length - 1 ? "" : "border-b border-gray-200"
+                }`;
 
+                return (
+                  <tr key={report.id || index} className="hover:bg-gray-50">
+                    <td className={className}>
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-600 font-semibold">
+                            {report.reportedBy?.charAt(0)}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-gray-800">
+                            {report.reportedBy}
+                          </p>
                 return (
                   <tr key={report.id} className="hover:bg-gray-50">
                     <td className={className}>
@@ -463,8 +540,58 @@ const AdminReport = () => {
                   </tr>
                 );
               })}
+                      </div>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {report.location}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {report.roomNo}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
+                        {report.category || 'Other'}
+                      </span>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {report.description}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <StatusBadge status={report.status} />
+                    </td>
+                    <td className={className}>
+                      <button
+                        onClick={() => setSelectedReport(report)}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      >
+                        <EyeIcon className="h-4 w-4 text-gray-600" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {selectedReport && (
+        <ReportDetailsCard
+          report={selectedReport}
+          onClose={() => setSelectedReport(null)}
+        />
+      )}
         </div>
       </div>
 
@@ -483,6 +610,7 @@ const AdminReport = () => {
       )}
     </div>
   );
+};
 };
 
 export default AdminReport;
