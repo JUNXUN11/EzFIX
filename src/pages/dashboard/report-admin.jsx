@@ -201,8 +201,8 @@ const AdminReport = () => {
     if (!category) return "bg-gray-100 text-gray-800";
     
     const colors = {
-      "electrical damage": "bg-red-100 text-red-800",
-      "civil damage": "bg-blue-100 text-blue-800",
+      electrical: "bg-red-100 text-red-800",
+      civil: "bg-blue-100 text-blue-800",
       piping: "bg-green-100 text-green-800",
       sanitary: "bg-yellow-100 text-yellow-800",
       "pest control": "bg-orange-100 text-orange-800"
@@ -373,8 +373,8 @@ const AdminReport = () => {
               className="text-sm py-1.5 px-3 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">All Damage Types</option>
-              <option value="electrical damage">Electrical</option>
-              <option value="civil damage">Civil</option>
+              <option value="electrical">Electrical</option>
+              <option value="civil">Civil</option>
               <option value="piping">Piping</option>
               <option value="sanitary">Sanitary</option>
               <option value="pest control">Pest Control</option>
