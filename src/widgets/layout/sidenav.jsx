@@ -1,6 +1,6 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import {
   Button,
@@ -12,15 +12,14 @@ import {
   DialogFooter,
 } from "@material-tailwind/react";
 import { useMaterialTailwindController, setOpenSidenav } from "@/context";
-import { useAuth } from "@/context/AuthContext"; 
+import { useAuth } from "@/context/AuthContext";
 
 export function Sidenav({ brandImg, brandName, routes }) {
   const [controller, dispatch] = useMaterialTailwindController();
   const { sidenavColor, sidenavType, openSidenav } = controller;
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const { user, loading, logout } = useAuth();
 
   const sidenavTypes = {
     dark: "bg-gradient-to-br from-gray-800 to-gray-900",
@@ -28,41 +27,11 @@ export function Sidenav({ brandImg, brandName, routes }) {
     transparent: "bg-transparent",
   };
 
-  const handleLogout = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (!refreshToken) {
-      localStorage.clear();
-      navigate("/auth/sign-in");
-      return;
-    }
-
+  const handleLogout = () => {
     setIsLoggingOut(true);
-    try {
-      const response = await fetch("https://theezfixapi.onrender.com/api/v1/users/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${refreshToken}`
-        },
-      });
-
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-
-      if (response.ok) {
-        navigate("/auth/sign-in");
-      } else {
-        console.error("Logout failed on server but proceeding with local logout");
-        navigate("/auth/sign-in");
-      }
-    } catch (error) {
-      console.error("Logout failed: ", error);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      navigate("/auth/sign-in");
-    } finally {
-      setIsLoggingOut(false);
-    }
+    setShowLogoutDialog(false);
+    logout(); 
+    setIsLoggingOut(false);
   };
 
   return (
@@ -172,7 +141,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
           <Button variant="text" color="blue-gray" onClick={() => setShowLogoutDialog(false)} className="mr-2">
             Cancel
           </Button>
-          <Button variant="gradient" color="red" onClick={() => { setShowLogoutDialog(false); handleLogout(); }}>
+          <Button variant="gradient" color="red" onClick={handleLogout}>
             Yes, Logout
           </Button>
         </DialogFooter>
