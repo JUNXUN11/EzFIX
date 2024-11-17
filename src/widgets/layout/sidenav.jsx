@@ -115,6 +115,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 {pages
                 .filter(({ name }) => {
                   if (name === "Admin Report" && user?.role !== "admin") return false;
+                  if (name === "dashboard" && user?.role !== "admin") return false;
+                  if (name === "User dashboard" && user?.role !== "user") return false;
                   if (name === "Create Report" && user?.role !== "user") return false;
                   if (name === "Report" && user?.role !== "user") return false;
                   return true;
@@ -180,8 +182,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
 }
 
 Sidenav.defaultProps = {
-  brandImg: "/img/logo-ct.png",
-  brandName: "Theezzfix",
+  brandImg: "/img/ezfixlogo.png",
+  brandName: "EzFIX",
 };
 
 Sidenav.propTypes = {
