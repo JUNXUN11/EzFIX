@@ -21,7 +21,8 @@
     "react-dom": "18.2.0",
     "react-router-dom": "6.17.0",
     "react-spinner": "^0.2.7",
-    "react-spinners": "^0.14.1"
+    "react-spinners": "^0.14.1",
+    "swiper": "^11.1.14"
   },
   "devDependencies": {
     "@types/react": "18.2.31",
