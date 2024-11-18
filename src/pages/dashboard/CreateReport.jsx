@@ -209,11 +209,12 @@ const CreateReport = () => {
               required
             >
               <Option value="">Select a Category</Option>
-              <Option value="Hardware">Hardware</Option>
-              <Option value="Software">Software</Option>
-              <Option value="Networking">Networking</Option>
               <Option value="Electrical">Electrical</Option>
-              <Option value="Plumbing">Plumbing</Option>
+              <Option value="Pest Control">Pest Control</Option>
+              <Option value="Piping">Piping</Option>
+              <Option value="Sanitary">Sanitary</Option>
+              <Option value="Civil">Plumbing</Option>
+              <Option value="Furniture">Electrical</Option>
               <Option value="Other">Other</Option>
             </Select>
             <Textarea
@@ -228,7 +229,7 @@ const CreateReport = () => {
               id="attachments"
               type="text"
               name="attachments"
-              label="Attachments (optional, comma-separated URLs)"
+              label="Attachments"
               value={report.attachments ? report.attachments.join(', ') : ''}
               onChange={(e) =>
                 setReport((prev) => ({
