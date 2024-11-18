@@ -5,8 +5,8 @@ import { useStatisticsCardsData, useStatisticsChartsData } from "@/data";
 import { ClockIcon } from "@heroicons/react/24/solid";
 import { useStatisticsCategoriesData } from "@/data/statistics-categories-data";
 import useReportTrends from "@/data/report-trends";
-import { Pie } from 'react-chartjs-2';  // Import Pie chart component from react-chartjs-2
-import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from 'chart.js'; // Required to register the necessary chart components
+import { Pie } from 'react-chartjs-2';
+import { Chart as ChartJS, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 
 // Register the necessary chart components
 ChartJS.register(Title, Tooltip, Legend, ArcElement);
@@ -15,7 +15,7 @@ export function Home() {
   const statisticsChartsData = useStatisticsChartsData();
   const statisticsCardsData = useStatisticsCardsData();
   const categoriesData = useStatisticsCategoriesData();
-  const { reportsData, locationData, pieChartData, loading, error } = useReportTrends();
+  const {pieChartData} = useReportTrends();
 
   return (
     <div className="mt-12 grid gap-6 grid-cols-1 lg:grid-cols-2">
@@ -56,15 +56,38 @@ export function Home() {
         </div>
       </div>
 
-      {/* Report Trends Section (Full width for mobile and desktop) */}
+      {/* Report Trends Section */}
       <div className="p-6 bg-white shadow-lg rounded-lg lg:col-span-2">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Report Trends</h2>
-        <div className="w-full h-64"> {/* Full width for report trends chart */}
-          <Pie data={pieChartData} />
+        <div className="flex items-center justify-between w-full h-48">
+          {/* Pie Chart */}
+          <div className="w-2/3 h-full">
+            <Pie
+              data={pieChartData}
+              options={{
+                plugins: {
+                  legend: {
+                    position: "right",
+                    labels: {
+                      font: {
+                        size: 14,
+                      },
+                      boxWidth: 20,
+                    },
+                  },
+                },
+                maintainAspectRatio: false, // Flexible layout
+              }}
+            />
+          </div>
+
+          {/* Legend */}
+          <div className="w-1/3">
+          </div>
         </div>
       </div>
 
-      {/* Statistics Section (Bottom Row, Full width for mobile and grid for desktop) */}
+      {/* Statistics Section */}
       <div className="p-6 bg-white rounded-lg shadow-lg col-span-1 lg:col-span-2">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Statistics</h2>
         <div className="grid gap-y-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
@@ -72,15 +95,6 @@ export function Home() {
             <StatisticsChart
               key={props.title}
               {...props}
-              footer={
-                <Typography
-                  variant="small"
-                  className="flex items-center font-normal text-blue-gray-600"
-                >
-                  <ClockIcon strokeWidth={2} className="h-4 w-4 text-blue-gray-400" />
-                  &nbsp;{props.footer}
-                </Typography>
-              }
             />
           ))}
         </div>

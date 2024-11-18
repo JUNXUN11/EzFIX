@@ -60,25 +60,18 @@ export function UserHome() {
         ))}
       </Swiper>
       
-      <h2 className="text-3xl font-semibold text-gray-800 mb-8">Statistics</h2>
-       <div className="grid gap-y-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
-        {statisticsChartsData.map(({ chart, title, description, footer }, index) => (
-          <div key={index} className="p-6 bg-white shadow-lg rounded-lg">
-            <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-            <p className="text-gray-600 mt-2">{description}</p>
-
-            {/* Make the chart occupy full width and height */}
-            <div className="w-full h-[50vh]"> {/* Adjust height as needed */}
-              <StatisticsChart chart={chart} />
-            </div>
-
-            <div className="text-sm text-gray-500 mt-4">{footer}</div>
-          </div>
-        ))}
+      <div className="p-6 bg-white rounded-lg shadow-lg col-span-1 lg:col-span-2"></div>
+      <h2 className="text-3xl font-semibold text-gray-800 mb-8 transition duration-300">Statistics</h2>
+      <div className="grid gap-y-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
+          {statisticsChartsData.map((props) => (
+            <StatisticsChart
+              key={props.title}
+              {...props}
+            />
+          ))}
       </div>
 
-
-      <h2 className="text-3xl font-semibold text-gray-800 mb-8">Frequently Asked Questions</h2>
+      <h2 className="text-3xl font-semibold text-gray-800 mb-8 transition duration-300">Frequently Asked Questions</h2>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
         {faqData.map((faq, index) => (
           <div key={index} className="p-6 bg-gray-50 hover:bg-blue-100 rounded-lg shadow-lg transition-all duration-300">
