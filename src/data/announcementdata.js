@@ -1,6 +1,6 @@
 export const announcementsData = [
   {
-    title: "GANGGUAN BEKALAN AIR",
+    title: "MAKLUMAN",
     date: "2024-11-13",
     description: "Gangguan Bekalan Air terancang daerah Johor Bahru, Kulai dan Pontian oleh pihak RANHILL SAJ.",
     image: "/img/Announcement4.JPG",
