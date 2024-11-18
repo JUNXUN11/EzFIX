@@ -29,7 +29,7 @@ export const routes = [
         name: "dashboard",
         path: "/home",
         element: (
-          <ProtectedRoute>
+          <ProtectedRoute requiredRole="admin">
             <Home />
           </ProtectedRoute>
         ),
@@ -43,17 +43,7 @@ export const routes = [
             <UserHome />
           </ProtectedRoute>
         ),
-      },
-      {
-        icon: <TableCellsIcon {...icon} />,
-        name: "Report",
-        path: "/report",
-        element: (
-          <ProtectedRoute>
-            <Report />
-          </ProtectedRoute>
-        ),
-      },
+      },     
       {
         icon: <TableCellsIcon {...icon} />,
         name: "Admin Report",
@@ -61,16 +51,6 @@ export const routes = [
         element: (
           <ProtectedRoute requiredRole="admin">
             <AdminReport />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        icon: <InformationCircleIcon {...icon} />,
-        name: "notifications",
-        path: "/notifications",
-        element: (
-          <ProtectedRoute>
-            <Notifications />
           </ProtectedRoute>
         ),
       },
@@ -85,12 +65,32 @@ export const routes = [
         ),
       },
       {
+        icon: <TableCellsIcon {...icon} />,
+        name: "My Report",
+        path: "/report",
+        element: (
+          <ProtectedRoute requiredRole="user">
+            <Report />
+          </ProtectedRoute>
+        ),
+      },
+      {
         icon: <UserCircleIcon {...icon} />,
         name: "profile",
         path: "/profile",
         element: (
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        icon: <InformationCircleIcon {...icon} />,
+        name: "notifications",
+        path: "/notifications",
+        element: (
+          <ProtectedRoute>
+            <Notifications />
           </ProtectedRoute>
         ),
       },

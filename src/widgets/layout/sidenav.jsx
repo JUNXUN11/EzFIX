@@ -87,7 +87,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
                   if (name === "dashboard" && user?.role !== "admin") return false;
                   if (name === "User dashboard" && user?.role !== "user") return false;
                   if (name === "Create Report" && user?.role !== "user") return false;
-                  if (name === "Report" && user?.role !== "user") return false;
+                  if (name === "My Report" && user?.role !== "user") return false;
                   return true;
                 })
                 .map(({ icon, name, path }) => (
