@@ -1,16 +1,19 @@
 import React, { useState } from "react";
 import { Typography } from "@material-tailwind/react";
 import { Swiper, SwiperSlide } from "swiper/react";
+import { StatisticsChart } from "@/widgets/charts";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 import { Navigation, Pagination } from "swiper/modules";
 import { announcementsData } from "@/data/announcementdata";
-import { Link } from 'react-router-dom';
+import { useStatisticsChartsData } from "@/data";
+import { faqData } from "@/data/faqdata";
 
 export function UserHome() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
+  const statisticsChartsData = useStatisticsChartsData();
 
   // Function to open the modal with the clicked image
   const handleImageClick = (imageSrc) => {
@@ -26,8 +29,8 @@ export function UserHome() {
 
 
   return (
-    <div className="mt-12 space-y-12">
-      <h2 className="text-2xl font-bold text-gray-800">Latest Announcements</h2>
+    <div className="mt-12 space-y-12 px-4 md:px-8 lg:px-16">
+      <h2 className="text-3xl font-semibold text-gray-800 mb-8 transition duration-300">Latest Announcements</h2>
       <Swiper
         modules={[Navigation, Pagination]}
         navigation
@@ -39,56 +42,61 @@ export function UserHome() {
       >
         {announcementsData.map((announcement, index) => (
           <SwiperSlide key={index}>
-            <div className="p-6 bg-green-50 shadow-xl rounded-xl flex items-center space-x-6">
-              {/* Image */}
-              <div className="flex-shrink-0 w-1/3">
-                <img
-                  src={announcement.image}
-                  alt={announcement.title}
-                  className="h-48 w-full object-cover rounded-lg cursor-pointer transition-all duration-300 ease-in-out transform hover:scale-110"
-                  onClick={() => handleImageClick(announcement.image)} // Open modal on click
-                />
-              </div>
-              {/* Content */}
-              <div className="w-2/3">
-                <Typography variant="h4" className="font-semibold text-green-700 mb-2">
-                  {announcement.title}
-                </Typography>
-                <Typography variant="small" className="text-gray-500 mb-4">
-                  {announcement.date}
-                </Typography>
-                <Typography className="text-gray-800 text-sm leading-relaxed">
-                  {announcement.description}
-                </Typography>
-              </div>
+           <div className="p-6 bg-white shadow-xl rounded-xl hover:shadow-2xl transition-shadow duration-300">
+            <div className="relative max-w-md mx-auto">
+              <img
+                src={announcement.image}
+                alt={announcement.title}
+                className="h-64 w-full object-cover rounded-lg cursor-pointer transition-transform duration-500 ease-in-out hover:scale-110"
+                onClick={() => handleImageClick(announcement.image)} // Open modal on click
+              />
             </div>
-          </SwiperSlide>
+            <Typography variant="h5" className="font-semibold text-gray-800 mt-4">
+                {announcement.title}
+              </Typography>
+              <Typography variant="small" className="text-gray-500">{announcement.date}</Typography>
+          </div>
+        </SwiperSlide>                      
         ))}
       </Swiper>
+      
+      <h2 className="text-3xl font-semibold text-gray-800 mb-8">Statistics</h2>
+       <div className="grid gap-y-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
+        {statisticsChartsData.map(({ chart, title, description, footer }, index) => (
+          <div key={index} className="p-6 bg-white shadow-lg rounded-lg">
+            <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+            <p className="text-gray-600 mt-2">{description}</p>
 
-      <div className="space-y-4">
-        <h3 className="text-2xl font-bold text-gray-800">Quick Access</h3>
-        <div className="grid grid-cols-2 gap-4">
-          <Link to="http://localhost:5174/dashboard/createreport" className="bg-green-500 text-white p-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors">
-            Create Report
-          </Link>
-          <Link to="http://localhost:5174/dashboard/notifications" className="bg-green-500 text-white p-4 rounded-lg shadow-md hover:bg-blue-700 transition-colors">
-            Notifications
-          </Link>
-        </div>
+            {/* Make the chart occupy full width and height */}
+            <div className="w-full h-[50vh]"> {/* Adjust height as needed */}
+              <StatisticsChart chart={chart} />
+            </div>
+
+            <div className="text-sm text-gray-500 mt-4">{footer}</div>
+          </div>
+        ))}
+      </div>
+
+
+      <h2 className="text-3xl font-semibold text-gray-800 mb-8">Frequently Asked Questions</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        {faqData.map((faq, index) => (
+          <div key={index} className="p-6 bg-gray-50 hover:bg-blue-100 rounded-lg shadow-lg transition-all duration-300">
+            <h3 className="text-xl font-semibold text-gray-800">{faq.question}</h3>
+            <p className="text-gray-600 mt-2">{faq.answer}</p>
+          </div>
+        ))}
       </div>
       
-      
-      {/* Modal for Image */}
       {isModalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
           onClick={closeModal} // Close modal if clicked outside
         >
-          <div className="relative bg-white p-4 rounded-lg max-w-4xl">
+          <div className="relative bg-white p-8 rounded-lg max-w-4xl">
             <button
               onClick={closeModal}
-              className="absolute top-0 right-0 text-white bg-red-500 rounded-full p-2"
+              className="absolute top-4 right-4 text-white bg-red-500 rounded-full p-2"
             >
               &times; {/* Close Button */}
             </button>
