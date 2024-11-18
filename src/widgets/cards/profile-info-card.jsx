@@ -13,7 +13,7 @@ export function ProfileInfoCard({ title, description, details, action }) {
         color="transparent"
         shadow={false}
         floated={false}
-        className="mx-0 mt-0 mb-0 flex items-center justify-between gap-2"
+        className="mx-0 mt-0 mb-4 flex items-center justify-between gap-2 border-b border-blue-gray-200 pb-2"
       >
         <Typography variant="h6" color="blue-gray">
           {title}
@@ -23,36 +23,29 @@ export function ProfileInfoCard({ title, description, details, action }) {
       <CardBody className="p-0">
         {description && (
           <Typography
-            variant="small"
-            className="font-normal text-blue-gray-500"
+            variant="paragraph"
+            className="font-normal text-blue-gray-500 mb-4"
           >
             {description}
           </Typography>
         )}
-        {description && details ? (
-          <hr className="my-2 border-blue-gray-50" />
-        ) : null}
         {details && (
-          <ul className="flex flex-col gap-2 p-0">
-            {Object.keys(details).map((el, key) => (
-              <li key={key} className="flex items-center gap-4">
+          <ul className="flex flex-col gap-4 p-0">
+            {Object.keys(details).map((key, index) => (
+              <li key={index} className="flex flex-col md:flex-row md:items-center md:gap-4">
                 <Typography
                   variant="small"
                   color="blue-gray"
-                  className="font-semibold capitalize"
+                  className="font-semibold capitalize w-28"
                 >
-                  {el}:
+                  {key}:
                 </Typography>
-                {typeof details[el] === "string" ? (
-                  <Typography
-                    variant="small"
-                    className="font-normal text-blue-gray-500"
-                  >
-                    {details[el]}
-                  </Typography>
-                ) : (
-                  details[el]
-                )}
+                <Typography
+                  variant="small"
+                  className="font-normal text-blue-gray-600"
+                >
+                  {details[key]}
+                </Typography>
               </li>
             ))}
           </ul>
@@ -72,8 +65,7 @@ ProfileInfoCard.propTypes = {
   title: PropTypes.string.isRequired,
   description: PropTypes.node,
   details: PropTypes.object,
+  action: PropTypes.node,
 };
-
-ProfileInfoCard.displayName = "/src/widgets/cards/profile-info-card.jsx";
 
 export default ProfileInfoCard;
