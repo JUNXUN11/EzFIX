@@ -73,14 +73,12 @@ export function useStatisticsChartsData() {
       color: "white",
       title: "Weekly Report Submissions",
       description: "Submission trends over the week",
-      footer: "updated 2 days ago",
       chart: weeklyReportSubmissionsChart,
     },
     {
       color: "white",
       title: "Weekly Resolution Trend",
       description: "Issues resolved over the week",
-      footer: "updated 4 min ago",
       chart: weeklyResolutionTrendChart,
     },
   ];
