@@ -70,7 +70,11 @@ export const AuthProvider = ({ children }) => {
       };
       setUser(user);
       sessionStorage.setItem("user", JSON.stringify(user));
-      navigate("/dashboard/home");
+      if (user.role === 'admin') {
+        navigate("/dashboard/home");  
+      } else if (user.role === 'user') {
+        navigate("/dashboard/User-home");  
+      }
     } catch (error) {
       setError(error.message || "Login failed");
     } finally {
