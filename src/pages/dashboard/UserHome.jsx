@@ -5,7 +5,7 @@ import { StatisticsChart } from "@/widgets/charts";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
-import { Navigation, Pagination } from "swiper/modules";
+import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import { announcementsData } from "@/data/announcementdata";
 import { useStatisticsChartsData } from "@/data";
 import { faqData } from "@/data/faqdata";
@@ -29,53 +29,53 @@ export function UserHome() {
 
 
   return (
-    <div className="mt-12 space-y-12 px-4 md:px-8 lg:px-16">
+    <div className="mt-12 space-y-12 px-4 md:px-8 lg:px-16 w-full">
       <h2 className="text-3xl font-semibold text-gray-800 mb-8 transition duration-300">Latest Announcements</h2>
       <Swiper
-        modules={[Navigation, Pagination]}
-        navigation
-        pagination={{ clickable: true }}
-        spaceBetween={20}
-        slidesPerView={1}
-        className="mt-6"
-        style={{ width: "100%", height: "auto" }}
-      >
-        {announcementsData.map((announcement, index) => (
-          <SwiperSlide key={index}>
-           <div className="p-6 bg-white shadow-xl rounded-xl hover:shadow-2xl transition-shadow duration-300">
-            <div className="relative max-w-md mx-auto">
-              <img
-                src={announcement.image}
-                alt={announcement.title}
-                className="h-64 w-full object-cover rounded-lg cursor-pointer transition-transform duration-500 ease-in-out hover:scale-110"
-                onClick={() => handleImageClick(announcement.image)} // Open modal on click
-              />
-            </div>
-            <Typography variant="h5" className="font-semibold text-gray-800 mt-4">
-                {announcement.title}
-              </Typography>
-              <Typography variant="small" className="text-gray-500">{announcement.date}</Typography>
-          </div>
-        </SwiperSlide>                      
-        ))}
-      </Swiper>
+          modules={[Navigation,Pagination,Autoplay]}
+          pagination={{ clickable: true }}
+          autoplay={{ delay: 3000, disableOnInteraction: false }} // Auto-scroll every 3 seconds
+          spaceBetween={20}
+          slidesPerView={1}
+          breakpoints={{
+            640: { slidesPerView: 1 },
+            768: { slidesPerView: 2 },
+            1024: { slidesPerView: 3 },
+          }}
+          className="mt-6"
+        >
+          {announcementsData.map((announcement, index) => (
+            <SwiperSlide key={index}>
+              <div className="p-6 bg-white shadow-xl rounded-xl hover:shadow-2xl transition-shadow duration-300">
+                <div className="relative max-w-md mx-auto">
+                  <img
+                    src={announcement.image}
+                    alt={announcement.title}
+                    className="h-64 w-full object-cover rounded-lg cursor-pointer transition-transform duration-500 ease-in-out hover:scale-110"
+                    onClick={() => handleImageClick(announcement.image)}
+                  />
+                </div>
+                <Typography variant="h5" className="font-semibold text-gray-800 mt-4">
+                  {announcement.title}
+                </Typography>
+                <Typography variant="small" className="text-gray-500">
+                  {announcement.date}
+                </Typography>
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+
       
       <h2 className="text-3xl font-semibold text-gray-800 mb-8">Statistics</h2>
-       <div className="grid gap-y-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
-        {statisticsChartsData.map(({ chart, title, description, footer }, index) => (
-          <div key={index} className="p-6 bg-white shadow-lg rounded-lg">
-            <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
-            <p className="text-gray-600 mt-2">{description}</p>
-
-            {/* Make the chart occupy full width and height */}
-            <div className="w-full h-[50vh]"> {/* Adjust height as needed */}
-              <StatisticsChart chart={chart} />
-            </div>
-
-            <div className="text-sm text-gray-500 mt-4">{footer}</div>
-          </div>
-        ))}
-      </div>
+      <div className="grid gap-y-6 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2">
+          {statisticsChartsData.map((props) => (
+            <StatisticsChart
+              key={props.title}
+              {...props}
+            />
+          ))}
+        </div>
 
 
       <h2 className="text-3xl font-semibold text-gray-800 mb-8">Frequently Asked Questions</h2>
