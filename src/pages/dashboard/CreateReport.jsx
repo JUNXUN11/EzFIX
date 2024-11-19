@@ -167,7 +167,7 @@ const CreateReport = () => {
             variant="h5"
             color="white" className="text-center"
           >
-            Create a New Report
+            Create Report
           </Typography>
         </CardHeader>
         <CardBody className="px-8 pb-6">
@@ -186,7 +186,7 @@ const CreateReport = () => {
                 id="location"
                 type="text"
                 name="location"
-                label="Location (e.g., Building A)"
+                label="Block Number (e.g., MA1)"
                 value={report.location}
                 onChange={handleChange}
                 required
@@ -211,11 +211,10 @@ const CreateReport = () => {
             >
               <Option value="">Select a Category</Option>
               <Option value="Electrical">Electrical</Option>
-              <Option value="Pest Control">Pest Control</Option>
+              <Option value="Civil">Civil</Option>
               <Option value="Piping">Piping</Option>
+              <Option value="Pest Control">Pest Control</Option>
               <Option value="Sanitary">Sanitary</Option>
-              <Option value="Civil">Plumbing</Option>
-              <Option value="Furniture">Electrical</Option>
               <Option value="Other">Other</Option>
             </Select>
             <Textarea
