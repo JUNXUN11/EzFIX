@@ -38,6 +38,7 @@ const CreateReport = () => {
       setReport((prev) => ({
         ...prev,
         studentId: storedStudent.id,
+        reportedBy: storedStudent.id,
       }));
     } else {
       console.error('No student ID found in sessionStorage.');
@@ -79,7 +80,6 @@ const CreateReport = () => {
       roomNo: parseInt(report.roomNo, 10),
       status: 'Pending',
       assignedTo: null,
-      reportedBy: null,
       technicianNo: null,
       isDuplicate: false,
       duplicateOf: null,
