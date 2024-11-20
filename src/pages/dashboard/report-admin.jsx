@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { EyeIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
 
 const Toast = ({ message, type, onClose }) => {
   return (
@@ -25,6 +25,7 @@ const AdminReport = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateError, setUpdateError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const handleSort = (key) => {
     // Convert key to match the actual data properties
@@ -76,10 +77,37 @@ const AdminReport = () => {
     return sortableItems;
   };
 
+  const predefinedCategories = [
+    "electrical",
+    "civil",
+    "piping",
+    "sanitary",
+    "pest control"
+  ];
+
+  const filterOptions = [
+    { value: "", label: "All Damage Types" },
+    { value: "electrical", label: "Electrical" },
+    { value: "civil", label: "Civil" },
+    { value: "piping", label: "Piping" },
+    { value: "sanitary", label: "Sanitary" },
+    { value: "pest control", label: "Pest Control" },
+    { value: "other", label: "Other" }
+  ];
+  
   const filteredData = () => {
     return sortedData().filter((item) => {
       const matchesSearch = item.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesFilter = !filterType || item.category?.toLowerCase() === filterType.toLowerCase();
+      
+      let matchesFilter = true;
+      if (filterType) {
+        if (filterType === "other") {
+          matchesFilter = !predefinedCategories.includes(item.category?.toLowerCase());
+        } else {
+          matchesFilter = item.category?.toLowerCase() === filterType.toLowerCase();
+        }
+      }
+      
       return matchesSearch && matchesFilter;
     });
   };
@@ -89,23 +117,37 @@ const AdminReport = () => {
     
     const intervalId = setInterval(() => {
       fetchReports();
-    }, 5000);
+    }, 30000);
 
     return () => clearInterval(intervalId);
   }, []);
 
   const fetchReports = async () => {
     try {
+      setLoading(true); 
       const response = await fetch('https://theezfixapi.onrender.com/api/v1/reports');
+      
       if (!response.ok) {
-        throw new Error('Server ERROR!! Failed to load reports');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Server ERROR!! Failed to load reports');
       }
+      
       const data = await response.json();
-      setReports(data);
-      setLoading(false);
+      
+      console.log('Fetched reports:', data);
+      
+      if (Array.isArray(data.reports)) {
+        setReports(data.reports); 
+      } else if (Array.isArray(data)) {
+        setReports(data); 
+      } else {
+        throw new Error('Invalid data format received');
+      }
+      
     } catch (error) {
       console.error('Error fetching reports:', error);
-      setError('Failed to load reports. Please try again later.');
+      setError(error.message || 'Failed to load reports. Please try again later.');
+    } finally {
       setLoading(false);
     }
   };
@@ -124,7 +166,9 @@ const AdminReport = () => {
     setUpdateError(null);
     
     try {
-      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}`, {
+      const id = reportId._id || reportId;
+      
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -133,7 +177,8 @@ const AdminReport = () => {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to update status');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update status');
       }
 
       const updatedReport = await response.json();
@@ -201,8 +246,8 @@ const AdminReport = () => {
     if (!category) return "bg-gray-100 text-gray-800";
     
     const colors = {
-      "electrical damage": "bg-red-100 text-red-800",
-      "civil damage": "bg-blue-100 text-blue-800",
+      electrical: "bg-red-100 text-red-800",
+      civil: "bg-blue-100 text-blue-800",
       piping: "bg-green-100 text-green-800",
       sanitary: "bg-yellow-100 text-yellow-800",
       "pest control": "bg-orange-100 text-orange-800"
@@ -355,7 +400,8 @@ const AdminReport = () => {
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <div className="bg-white rounded-lg shadow-md">
-      <div className="mb-8 p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 rounded-t-lg flex justify-between items-center">
+        {/* Desktop view */}
+        <div className="hidden md:flex mb-8 p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 rounded-t-lg flex justify-between items-center">
           <h6 className="text-white text-lg font-semibold">
             Reported Damages
           </h6>
@@ -370,104 +416,197 @@ const AdminReport = () => {
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="text-sm py-1.5 px-3 border rounded-lg bg-white text-gray-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="text-sm py-1.5 px-3 border rounded-lg bg-white text-gray-500 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Damage Types</option>
-              <option value="electrical damage">Electrical</option>
-              <option value="civil damage">Civil</option>
-              <option value="piping">Piping</option>
-              <option value="sanitary">Sanitary</option>
-              <option value="pest control">Pest Control</option>
-              <option value="other">Other</option>
+              {filterOptions.map(option => (
+                <option 
+                  key={option.label} 
+                  value={option.value}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  className="text-gray-700"
+                >
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
-        <div className="overflow-x-auto px-0 pt-0 pb-2">
-          <table className="w-full min-w-[640px] table-auto">
-            <thead>
-              <tr>
-                {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Status", "Actions"].map((el) => (
-                  <th
-                    key={el}
-                    className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
-                    onClick={() => handleSort(el.toLowerCase().replace(/[. ]/g, ""))}
-                  >
-                    <span className="text-xs font-bold uppercase text-gray-600">
-                      {el}
-                      {sortConfig.key === el.toLowerCase().replace(/[. ]/g, "") && (
-                        <span>{sortConfig.direction === "asc" ? " ▲" : " ▼"}</span>
-                      )}
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredData().map((report, index) => {
-                const className = `py-3 px-5 ${
-                  index === reports.length - 1 ? "" : "border-b border-gray-200"
-                }`;
-
-                return (
-                  <tr key={report.id} className="hover:bg-gray-50">
-                    <td className={className}>
-                      <div className="flex items-center gap-4">
-                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                          <span className="text-gray-600 font-semibold">
-                            {report.reportedBy?.charAt(0)}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-semibold text-gray-800">
-                            {report.reportedBy}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className={className}>
-                      <p className="text-sm font-semibold text-gray-600">
-                        {report.location}
-                      </p>
-                    </td>
-                    <td className={className}>
-                      <p className="text-sm font-semibold text-gray-600">
-                        {report.roomNo}
-                      </p>
-                    </td>
-                    <td className={className}>
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
-                        {report.category || 'Other'}
+        <div className="overflow-x-auto">
+          <div className="hidden md:block">
+            <table className="w-full min-w-[640px] table-auto">
+              <thead>
+                <tr>
+                  {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Status", "Actions"].map((el) => (
+                    <th
+                      key={el}
+                      className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
+                      onClick={() => handleSort(el.toLowerCase().replace(/[. ]/g, ""))}
+                    >
+                      <span className="text-xs font-bold uppercase text-gray-600">
+                        {el}
+                        {sortConfig.key === el.toLowerCase().replace(/[. ]/g, "") && (
+                          <span>{sortConfig.direction === "asc" ? " ▲" : " ▼"}</span>
+                        )}
                       </span>
-                    </td>
-                    <td className={className}>
-                      <p className="text-sm font-semibold text-gray-600">
-                        {report.description}
-                      </p>
-                    </td>
-                    <td className={className}>
-                      <p className="text-sm font-semibold text-gray-600">
-                        {new Date(report.createdAt).toLocaleDateString()}
-                      </p>
-                    </td>
-                    <td className={className}>
-                      <StatusBadge status={report.status} />
-                    </td>
-                    <td className={className}>
-                      <button
-                        onClick={() => setSelectedReport(report)}
-                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                      >
-                        <EyeIcon className="h-4 w-4 text-gray-600" />
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {filteredData().map((report, index) => {
+                  const className = `py-3 px-5 ${
+                    index === reports.length - 1 ? "" : "border-b border-gray-200"
+                  }`;
+
+                  return (
+                    <tr key={report.id} className="hover:bg-gray-50">
+                      <td className={className}>
+                        <div className="flex items-center gap-4">
+                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-600 font-semibold">
+                              {report.reportedBy?.charAt(0)}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-800">
+                              {report.reportedBy}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className={className}>
+                        <p className="text-sm font-semibold text-gray-600">
+                          {report.location}
+                        </p>
+                      </td>
+                      <td className={className}>
+                        <p className="text-sm font-semibold text-gray-600">
+                          {report.roomNo}
+                        </p>
+                      </td>
+                      <td className={className}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
+                          {report.category || 'Other'}
+                        </span>
+                      </td>
+                      <td className={className}>
+                        <p className="text-sm font-semibold text-gray-600">
+                          {report.description}
+                        </p>
+                      </td>
+                      <td className={className}>
+                        <p className="text-sm font-semibold text-gray-600">
+                          {new Date(report.createdAt).toLocaleDateString()}
+                        </p>
+                      </td>
+                      <td className={className}>
+                        <StatusBadge status={report.status} />
+                      </td>
+                      <td className={className}>
+                        <button
+                          onClick={() => setSelectedReport(report)}
+                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <EyeIcon className="h-4 w-4 text-gray-600" />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-
+      
+      {/* Mobile view */}
+      <div className="md:hidden bg-white">
+        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 p-4 rounded-t-lg">
+            <div className="flex justify-between items-center mb-4">
+              <h6 className="text-white text-lg font-semibold">
+                Reported Damages
+              </h6>
+              <button 
+                onClick={() => setIsFilterOpen(!isFilterOpen)}
+                className="p-2 text-white hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <FunnelIcon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="relative">
+              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+              <input
+                type="text"
+                placeholder="Search by name"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-300"
+              />
+            </div>
+            
+            {/* Collapsible Filter */}
+            <div className={`transition-all duration-300 ease-in-out ${isFilterOpen ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="w-full px-3 py-2 mt-2 border rounded-lg bg-white/10 text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {filterOptions.map(option => (
+                  <option 
+                    key={option.label} 
+                    value={option.value}
+                    className="text-gray-700"
+                  >
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        {filteredData().map((report) => (
+          <div key={report.id} className="p-4 border-b border-gray-400">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-600 font-semibold">
+                    {report.reportedBy?.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{report.reportedBy}</p>
+                  <p className="text-xs text-gray-500">{new Date(report.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedReport(report)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <EyeIcon className="h-4 w-4 text-gray-600" />
+              </button>
+            </div>
+            
+            <div className="space-y-2">
+              <div>
+                <span className="text-xs text-gray-800">Block: {report.location}</span>
+              </div>
+              <div>
+                <span className="text-xs text-gray-800">Room: {report.roomNo}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
+                  {report.category || 'Other'}
+                </span>
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold`}>
+                  <StatusBadge status={report.status} />
+                </span>
+              </div>
+              <p className="text-sm text-gray-900 line-clamp-2">{report.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+        
       {selectedReport && (
         <ReportDetailsCard
           report={selectedReport}
