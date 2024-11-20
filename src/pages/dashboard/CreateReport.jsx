@@ -114,7 +114,7 @@ const CreateReport = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-50 to-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen">
       {showAlert.show && (
         <div
           role="alert"
