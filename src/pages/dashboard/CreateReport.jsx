@@ -22,6 +22,7 @@ const CreateReport = () => {
     description: '',
     attachments: null,
   });
+
   const [showAlert, setShowAlert] = useState({
     show: false,
     message: '',
@@ -37,6 +38,7 @@ const CreateReport = () => {
       setReport((prev) => ({
         ...prev,
         studentId: storedStudent.id,
+        reportedBy: storedStudent.id,
       }));
     } else {
       console.error('No student ID found in sessionStorage.');
@@ -78,7 +80,6 @@ const CreateReport = () => {
       roomNo: parseInt(report.roomNo, 10),
       status: 'Pending',
       assignedTo: null,
-      reportedBy: null,
       technicianNo: null,
       isDuplicate: false,
       duplicateOf: null,
@@ -113,7 +114,7 @@ const CreateReport = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-gray-50 to-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen">
       {showAlert.show && (
         <div
           role="alert"
@@ -166,7 +167,7 @@ const CreateReport = () => {
             variant="h5"
             color="white" className="text-center"
           >
-            Create a New Report
+            Create Report
           </Typography>
         </CardHeader>
         <CardBody className="px-8 pb-6">
@@ -185,7 +186,7 @@ const CreateReport = () => {
                 id="location"
                 type="text"
                 name="location"
-                label="Location (e.g., Building A)"
+                label="Block Number (e.g., MA1)"
                 value={report.location}
                 onChange={handleChange}
                 required
@@ -210,11 +211,10 @@ const CreateReport = () => {
             >
               <Option value="">Select a Category</Option>
               <Option value="Electrical">Electrical</Option>
-              <Option value="Pest Control">Pest Control</Option>
+              <Option value="Civil">Civil</Option>
               <Option value="Piping">Piping</Option>
+              <Option value="Pest Control">Pest Control</Option>
               <Option value="Sanitary">Sanitary</Option>
-              <Option value="Civil">Plumbing</Option>
-              <Option value="Furniture">Electrical</Option>
               <Option value="Other">Other</Option>
             </Select>
             <Textarea
