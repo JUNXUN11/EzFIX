@@ -34,7 +34,7 @@ export function UserHome() {
       <Swiper
           modules={[Navigation,Pagination,Autoplay]}
           pagination={{ clickable: true }}
-          autoplay={{ delay: 3000, disableOnInteraction: false }} // Auto-scroll every 3 seconds
+          autoplay={{ delay: 1500, disableOnInteraction: false }} // Auto-scroll every 3 seconds
           spaceBetween={20}
           slidesPerView={1}
           breakpoints={{
@@ -46,23 +46,23 @@ export function UserHome() {
         >
           {announcementsData.map((announcement, index) => (
             <SwiperSlide key={index}>
-              <div className="p-6 bg-white shadow-xl rounded-xl hover:shadow-2xl transition-shadow duration-300">
-                <div className="relative max-w-md mx-auto">
-                  <img
-                    src={announcement.image}
-                    alt={announcement.title}
-                    className="h-64 w-full object-cover rounded-lg cursor-pointer transition-transform duration-500 ease-in-out hover:scale-110"
-                    onClick={() => handleImageClick(announcement.image)}
-                  />
-                </div>
-                <Typography variant="h5" className="font-semibold text-gray-800 mt-4">
-                  {announcement.title}
-                </Typography>
-                <Typography variant="small" className="text-gray-500">
-                  {announcement.date}
-                </Typography>
+            <div className="p-6 bg-white shadow-xl rounded-xl hover:shadow-2xl transition-shadow duration-300">
+              <div className="relative max-w-md mx-auto">
+                <img
+                  src={announcement.image}
+                  alt={announcement.title}
+                  className="h-64 w-full object-cover rounded-lg cursor-pointer transition-transform duration-500 ease-in-out hover:scale-110"
+                  onClick={() => handleImageClick(announcement.image)}
+                />
               </div>
-            </SwiperSlide>
+              <Typography variant="h5" className="font-semibold text-gray-800 mt-4">
+                {announcement.title}
+              </Typography>
+              <Typography variant="small" className="text-gray-500">
+                {announcement.date}
+              </Typography>
+            </div>
+          </SwiperSlide>
           ))}
         </Swiper>
 
@@ -96,7 +96,7 @@ export function UserHome() {
           <div className="relative bg-white p-8 rounded-lg max-w-4xl">
             <button
               onClick={closeModal}
-              className="absolute top-4 right-4 text-white bg-red-500 rounded-full p-2"
+              className="absolute top-4 right-2 text-red rounded-full p-2"
             >
               &times; {/* Close Button */}
             </button>
