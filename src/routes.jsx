@@ -36,7 +36,7 @@ export const routes = [
       },
       {
         icon: <HomeIcon {...icon} />,
-        name: "User dashboard",
+        name: "Dashboard",
         path: "/User-home",
         element: (
           <ProtectedRoute>

@@ -1,8 +1,6 @@
 import React from "react";
-import { Typography } from "@material-tailwind/react";
 import { StatisticsChart } from "@/widgets/charts";
 import { useStatisticsCardsData, useStatisticsChartsData } from "@/data";
-import { ClockIcon } from "@heroicons/react/24/solid";
 import { useStatisticsCategoriesData } from "@/data/statistics-categories-data";
 import useReportTrends from "@/data/report-trends";
 import { Pie } from 'react-chartjs-2';  // Import Pie chart component from react-chartjs-2
@@ -15,7 +13,7 @@ export function Home() {
   const statisticsChartsData = useStatisticsChartsData();
   const statisticsCardsData = useStatisticsCardsData();
   const categoriesData = useStatisticsCategoriesData();
-  const { reportsData, locationData, pieChartData, loading, error } = useReportTrends();
+  const { pieChartData } = useReportTrends();
 
   return (
     <div className="mt-12 grid gap-6 grid-cols-1 lg:grid-cols-2">
@@ -56,11 +54,33 @@ export function Home() {
         </div>
       </div>
 
-      {/* Report Trends Section (Full width for mobile and desktop) */}
       <div className="p-6 bg-white shadow-lg rounded-lg lg:col-span-2">
         <h2 className="text-xl font-bold text-gray-800 mb-4">Report Trends</h2>
-        <div className="w-full h-64"> {/* Full width for report trends chart */}
-          <Pie data={pieChartData} />
+        <div className="flex items-center justify-between w-full h-48">
+          {/* Pie Chart */}
+          <div className="w-2/3 h-full">
+            <Pie
+              data={pieChartData}
+              options={{
+                plugins: {
+                  legend: {
+                    position: "right",
+                    labels: {
+                      font: {
+                        size: 14,
+                      },
+                      boxWidth: 20,
+                    },
+                  },
+                },
+                maintainAspectRatio: false, // Flexible layout
+              }}
+            />
+          </div>
+
+          {/* Legend */}
+          <div className="w-1/3">
+          </div>
         </div>
       </div>
 
