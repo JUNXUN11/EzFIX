@@ -38,7 +38,7 @@ const CreateReport = () => {
       setReport((prev) => ({
         ...prev,
         studentId: storedStudent.id,
-        reportedBy: storedStudent.id,
+        reportedBy: storedStudent.username,
       }));
     } else {
       console.error('No student ID found in sessionStorage.');
