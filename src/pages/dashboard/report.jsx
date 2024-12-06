@@ -9,7 +9,7 @@ import {
   Tooltip,
   IconButton,
 } from "@material-tailwind/react";
-import { EyeIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, CalendarIcon, MapPinIcon } from "lucide-react";
 
 const Report = () => {
   const [reports, setReports] = useState([]);
@@ -52,24 +52,23 @@ const Report = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      "Electrical Damage": "red",
-      "Civil Damage": "orange",
-      "Piping": "blue",
-      "Pest Control": "green",
-      "Sanitary": "purple",
-      "Others": "gray",
+      "Electrical": "bg-red-100 text-red-800",
+      "Civil": "bg-orange-100 text-orange-800",
+      "Piping": "bg-blue-100 text-blue-800",
+      "Pest Control": "bg-green-100 text-green-800",
+      "Sanitary": "bg-purple-100 text-purple-800",
+      "Others": "bg-gray-100 text-gray-800",
     };
-    return colors[category] || "gray";
+    return colors[category] || "bg-gray-100 text-gray-800";
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      "pending": "yellow",
-      "in progress": "blue",
-      "completed": "green",
-      "rejected": "red",
+      "Pending": "bg-yellow-100 text-yellow-800",
+      "In progress": "bg-blue-100 text-blue-800",
+      "Fixed": "bg-green-100 text-green-800",
     };
-    return colors[status.toLowerCase()] || "gray";
+    return colors[status] || "bg-gray-100 text-gray-800";
   };
 
   const formatDate = (dateString) => {
@@ -96,224 +95,100 @@ const Report = () => {
   }
 
   return (
-    <div className="mt-12 mb-8 flex flex-col gap-12">
-      <Card>
-        <CardHeader
-          variant="gradient"
-          color="gray"
-          className="mb-8 p-6 flex justify-between items-center"
-        >
-          <Typography variant="h6" color="white">
-            My Reports
-          </Typography>*+
-        </CardHeader>
-        <CardBody className="overflow-x-scroll px-0 pt-0 pb-2">
-          {reports.length === 0 ? (
-            <div className="flex justify-center items-center p-6">
-              <Typography variant="h6" color="blue-gray">
-                No reports submitted yet
-              </Typography>
-            </div>
-          ) : (
-            <table className="w-full min-w-[640px] table-auto">
-              <thead>
-                <tr>
-                  {[
-                    "Date",
-                    "Title",
-                    "Location",
-                    "Category",
-                    "Status",
-                    "Actions",
-                  ].map((header) => (
-                    <th
-                      key={header}
-                      className="border-b border-blue-gray-50 py-3 px-6 text-left"
-                    >
-                      <Typography
-                        variant="small"
-                        className="text-[11px] font-medium uppercase text-blue-gray-400"
-                      >
-                        {header}
-                      </Typography>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {reports.map(
-                  (
-                    {
-                      id,
-                      title,
-                      location,
-                      category,
-                      status,
-                      createdAt,
-                    },
-                    index
-                  ) => {
-                    const isLast = index === reports.length - 1;
-                    const classes = isLast
-                      ? "p-4"
-                      : "p-4 border-b border-blue-gray-50";
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">My Reports</h1>
+        <p className="text-gray-600 mt-2">Track and manage your maintenance reports</p>
+      </div>
 
-                    return (
-                      <tr key={id}>
-                        <td className={classes}>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal"
-                          >
-                            {formatDate(createdAt)}
-                          </Typography>
-                        </td>
-                        <td className={classes}>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal"
-                          >
-                            {title}
-                          </Typography>
-                        </td>
-                        <td className={classes}>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal"
-                          >
-                            {location}
-                          </Typography>
-                        </td>
-                        <td className={classes}>
-                          <Chip
-                            variant="gradient"
-                            color={getCategoryColor(category)}
-                            value={category}
-                            className="py-0.5 px-2 text-[11px] font-medium"
-                          />
-                        </td>
-                        <td className={classes}>
-                          <Chip
-                            variant="gradient"
-                            color={getStatusColor(status)}
-                            value={status}
-                            className="py-0.5 px-2 text-[11px] font-medium capitalize"
-                          />
-                        </td>
-                        <td className={classes}>
-                          <Tooltip content="View Details">
-                            <IconButton
-                              variant="text"
-                              color="blue-gray"
-                              onClick={() => setSelectedReport(reports[index])}
-                            >
-                              <EyeIcon className="h-4 w-4" />
-                            </IconButton>
-                          </Tooltip>
-                        </td>
-                      </tr>
-                    );
-                  }
-                )}
-              </tbody>
-            </table>
-          )}
-        </CardBody>
-      </Card>
+      {reports.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <div className="max-w-sm mx-auto">
+            <h3 className="text-xl font-semibold text-gray-700">No Reports Yet</h3>
+            <p className="text-gray-500 mt-2">You haven't submitted any reports yet.</p>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reports.map((report) => (
+            <Card key={report.id} className="hover:shadow-lg transition-shadow duration-300">
+              <CardBody className="p-6">
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                      {report.title}
+                    </h3>
+                    <div className="flex items-center text-gray-600 mb-2">
+                      <MapPinIcon className="h-4 w-4 mr-2" />
+                      <span className="text-sm">{report.location}</span>
+                    </div>
+                    <div className="flex items-center text-gray-600">
+                      <CalendarIcon className="h-4 w-4 mr-2" />
+                      <span className="text-sm">{formatDate(report.createdAt)}</span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setSelectedReport(report)}
+                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
+                  >
+                    <EyeIcon className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <span
+                    className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(report.category)}`}
+                  >
+                    {report.category}
+                  </span>
+                  <span
+                    className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ml-2 ${getStatusColor(report.status)}`}
+                  >
+                    {report.status}
+                  </span>
+                </div>
+              </CardBody>
+            </Card>
+          ))}
+        </div>
+      )}
 
     {selectedReport && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-    <Card className="w-[24rem]">
-      <CardHeader
-        variant="gradient"
-        color="gray"
-        className="p-4 flex items-center justify-between"
-      >
-        <Typography variant="h6" color="white">
-          Report Details
-        </Typography>
-      </CardHeader>
-      <CardBody className="flex flex-col gap-4 px-6 py-4">
-        <div className="flex flex-col">
-          <Typography
-            variant="small"
-            color="gray"
-            className="font-medium text-sm"
-          >
-            Title
-          </Typography>
-          <Typography className="text-md text-blue-gray-700 font-semibold">
-            {selectedReport.title}
-          </Typography>
-        </div>
-        <div className="flex flex-col">
-          <Typography
-            variant="small"
-            color="gray"
-            className="font-medium text-sm"
-          >
-            Location
-          </Typography>
-          <Typography className="text-md text-blue-gray-700 font-semibold">
-            {selectedReport.location}
-          </Typography>
-        </div>
-        <div className="flex flex-col">
-          <Typography
-            variant="small"
-            color="gray"
-            className="font-medium text-sm"
-          >
-            Category
-          </Typography>
-          <Chip
-            variant="gradient"
-            color={getCategoryColor(selectedReport.category)}
-            value={selectedReport.category}
-            className="py-1 px-2 text-sm font-medium w-fit"
-          />
-        </div>
-        <div className="flex flex-col">
-          <Typography
-            variant="small"
-            color="gray"
-            className="font-medium text-sm"
-          >
-            Status
-          </Typography>
-          <Chip
-            variant="gradient"
-            color={getStatusColor(selectedReport.status)}
-            value={selectedReport.status}
-            className="py-1 px-2 text-sm font-medium capitalize w-fit"
-          />
-        </div>
-        <div className="flex flex-col">
-          <Typography
-            variant="small"
-            color="gray"
-            className="font-medium text-sm"
-          >
-            Created At
-          </Typography>
-          <Typography className="text-md text-blue-gray-700 font-semibold">
-            {formatDate(selectedReport.createdAt)}
-          </Typography>
-        </div>
-        <button
-          onClick={() => setSelectedReport(null)}
-          className="mt-4 w-full bg-gray-500 text-white px-4 py-2 rounded-lg font-medium text-sm hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-75"
-        >
-          Close
-        </button>
-      </CardBody>
-    </Card>
-  </div>
-)}
-
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="bg-gray-800 text-white p-6">
+            <h3 className="text-xl font-semibold">Report Details</h3>
+          </CardHeader>
+          <CardBody className="p-6 space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Description</label>
+              <p className="text-gray-800">{selectedReport.description || "No description provided."}</p>
+            </div>
+            <div>
+              <label className="text-sm font-medium text-gray-500">Attachment</label>
+              {selectedReport.attachment ? (
+                <a
+                  href={selectedReport.attachment}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  View Attachment
+                </a>
+              ) : (
+                <p className="text-gray-800">No attachment available.</p>
+              )}
+            </div>
+            <button
+              onClick={() => setSelectedReport(null)}
+              className="w-full mt-6 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
+            >
+              Close
+            </button>
+          </CardBody>
+        </Card>
+      </div>
+    )};
     </div>
   );
 };
