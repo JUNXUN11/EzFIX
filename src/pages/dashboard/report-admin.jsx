@@ -133,9 +133,7 @@ const AdminReport = () => {
       }
       
       const data = await response.json();
-      
-      console.log('Fetched reports:', data);
-      
+
       if (Array.isArray(data.reports)) {
         setReports(data.reports); 
       } else if (Array.isArray(data)) {
@@ -161,7 +159,6 @@ const AdminReport = () => {
   };
 
   const handleStatusUpdate = async (reportId, newStatus) => {
-    console.log('Updating report:', reportId, 'with status:', newStatus);
     setIsUpdating(true);
     setUpdateError(null);
     
@@ -182,13 +179,11 @@ const AdminReport = () => {
       }
 
       const updatedReport = await response.json();
-      console.log('Response from server:', updatedReport);
 
       setReports(prevReports => {
         const newReports = prevReports.map(report => 
           report._id === reportId ? { ...report, status: newStatus } : report
         );
-        console.log('Updated reports:', newReports); // Add this
         return newReports;
       });
 
