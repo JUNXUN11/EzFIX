@@ -5,13 +5,19 @@ import {
   CardBody,
   Spinner,
 } from "@material-tailwind/react";
-import { EyeIcon, CalendarIcon, MapPinIcon } from "lucide-react";
+import { EyeIcon, CalendarIcon, MapPinIcon, ImageIcon, TrashIcon } from "lucide-react";
 
 const Report = () => {
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
+  const getAttachmentUrl = (reportId) => {
+    return `http://localhost:8080/api/v1/reports/{reportId}/attachments/{fileId}`;
+  };
 
   useEffect(() => {
     fetchReports();
@@ -37,7 +43,27 @@ const Report = () => {
         throw new Error("Failed to fetch reports. Please try again.");
       }
       const data = await response.json();
-      setReports(data); 
+
+      const statusPriority = {
+        "Pending": 1,
+        "In progress": 2,
+        "Rejected": 3,
+        "Fixed": 4
+      };
+
+      const sortedReports = data.sort((a, b) => 
+        statusPriority[a.status] - statusPriority[b.status]
+      );
+      
+      // Transform attachments to full URLs if needed
+      const processedReports = data.map(report => ({
+        ...report,
+        attachments: report.attachments.map(attachmentId => 
+          getAttachmentUrl(report.id)
+        )
+      }));
+
+      setReports(processedReports); 
     } catch (error) {
       console.error("Error fetching reports:", error);
       setError(error.message || "Failed to load reports.");
@@ -45,6 +71,37 @@ const Report = () => {
       setLoading(false);
     }
   };
+
+  const deleteReport = async (reportId) => {
+    try {
+      setLoading(true);
+      const storedUser = JSON.parse(sessionStorage.getItem("user"));
+      const response = await fetch(
+        `https://theezfixapi.onrender.com/api/v1/reports/${reportId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${storedUser.token}`
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to delete report. Please try again.");
+      }
+
+      // Remove the deleted report from the list
+      setReports(prevReports => prevReports.filter(report => report.id !== reportId));
+      setConfirmDelete(null);
+    } catch (error) {
+      console.error("Error deleting report:", error);
+      setError(error.message || "Failed to delete report.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -60,8 +117,9 @@ const Report = () => {
 
   const getStatusColor = (status) => {
     const colors = {
-      "Pending": "bg-yellow-100 text-yellow-800",
-      "In progress": "bg-blue-100 text-blue-800",
+      "Pending": "bg-gray-100 text-gray-800",
+      "Rejected": "bg-red-100 text-red-800",
+      "In progress": "bg-orange-100 text-orange-800",
       "Fixed": "bg-green-100 text-green-800",
     };
     return colors[status] || "bg-gray-100 text-gray-800";
@@ -123,12 +181,23 @@ const Report = () => {
                       <span className="text-sm">{formatDate(report.createdAt)}</span>
                     </div>
                   </div>
+
+                  <div className="flex items-center">
                   <button
                     onClick={() => setSelectedReport(report)}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full"
+                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-2"
                   >
                     <EyeIcon className="h-5 w-5" />
                   </button>
+                  {report.status === "Pending" && (
+                    <button
+                      onClick={() => setConfirmDelete(report)}
+                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full"
+                    >
+                      <TrashIcon className="h-5 w-5" />
+                    </button>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-2">
@@ -161,13 +230,22 @@ const Report = () => {
               <p className="text-gray-800">{selectedReport.description || "No description provided."}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500">Attachment</label>
-              {selectedReport.attachment ? (
-                <img
-                  src={selectedReport.attachment}
-                  alt="Attachment"
-                  className="w-full h-auto rounded-lg mt-2"
-                />
+              <label className="text-sm font-medium text-gray-500 flex items-center">
+                <ImageIcon className="h-4 w-4 mr-2"/>
+                Attachments
+              </label>
+              {selectedReport.attachment && selectedReport.attachments.length > 0 ? (
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                    {selectedReport.attachments.map((attachment, index) => (
+                      <img
+                        key={index}
+                        src={attachment}
+                        alt={`Attachment ${index + 1}`}
+                        className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => setSelectedImage(attachment)}
+                      />
+                    ))}
+                </div>
               ) : (
                 <p className="text-gray-800">No attachment available.</p>
               )}
@@ -181,7 +259,53 @@ const Report = () => {
           </CardBody>
         </Card>
       </div>
-    )};
+    )}
+    {selectedImage && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4 cursor-pointer"
+          onClick={() => setSelectedImage(null)}
+        >
+          <img
+            src={selectedImage}
+            alt="Full Image"
+            className="max-w-full max-h-full object-contain"
+            onError={(e) => {
+              e.target.src = 'path/to/fallback/image.png'; // Add a fallback image
+              console.error(`Failed to load full image: ${selectedImage}`);
+            }}
+          />
+        </div>
+      )}
+      
+      {confirmDelete && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4">
+          <Card className="w-full max-w-md">
+            <CardHeader className="bg-gray-800 text-white p-6">
+              <h3 className="text-xl font-semibold">Confirm Delete</h3>
+            </CardHeader>
+            <CardBody className="p-6 space-y-4">
+              <p className="text-gray-800">
+                Are you sure you want to delete this report? 
+                This action cannot be undone.
+              </p>
+              <div className="flex justify-between space-x-4">
+                <button
+                  onClick={() => setConfirmDelete(null)}
+                  className="flex-1 bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => deleteReport(confirmDelete.id)}
+                  className="flex-1 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors duration-200"
+                >
+                  Delete
+                </button>
+              </div>
+            </CardBody>
+          </Card>
+        </div>  
+      )}
     </div>
   );
 };

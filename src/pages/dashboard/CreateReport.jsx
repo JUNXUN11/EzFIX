@@ -301,7 +301,6 @@ const CreateReport = () => {
               onChange={handleChange}
               required
             />
-            {/* File Input for Attachments */}
             <div>
               <label
                 htmlFor="attachments"
@@ -318,7 +317,6 @@ const CreateReport = () => {
                 onChange={handleFileChange}
                 className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
               />
-              {/* Display Selected Files */}
               {report.attachments && report.attachments.length > 0 && (
                 <div className="mt-2">
                   <Typography variant="small" color="gray" className="font-normal">
