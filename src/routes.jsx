@@ -26,7 +26,7 @@ export const routes = [
     pages: [
       {
         icon: <HomeIcon {...icon} />,
-        name: "dashboard",
+        name: "Admin Dashboard",
         path: "/home",
         element: (
           <ProtectedRoute requiredRole="admin">

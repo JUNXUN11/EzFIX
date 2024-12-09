@@ -15,14 +15,14 @@ import axios from 'axios';
 const CreateReport = () => {
   const [report, setReport] = useState({
     studentId: '',
+    reportedBy: '',
     title: '',
     location: '',
     roomNo: '',
     category: '',
     description: '',
-    attachments: null,
+    attachments: [], 
   });
-
   const [showAlert, setShowAlert] = useState({
     show: false,
     message: '',
@@ -32,17 +32,19 @@ const CreateReport = () => {
 
   const API_URL = 'https://theezfixapi.onrender.com/api/v1/reports';
 
-  useEffect(() => {
+  const refreshUserData = () => {
     const storedStudent = JSON.parse(sessionStorage.getItem('user'));
     if (storedStudent) {
-      setReport((prev) => ({
+      setReport(prev => ({
         ...prev,
         studentId: storedStudent.id,
-        reportedBy: storedStudent.id,
+        reportedBy: storedStudent.username,
       }));
-    } else {
-      console.error('No student ID found in sessionStorage.');
     }
+  };
+
+  useEffect(() => {
+    refreshUserData();
   }, []);
 
   const handleChange = (e) => {
@@ -57,6 +59,14 @@ const CreateReport = () => {
     setReport((prev) => ({
       ...prev,
       category: value,
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setReport((prev) => ({
+      ...prev,
+      attachments: files,
     }));
   };
 
@@ -75,21 +85,31 @@ const CreateReport = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const dataToSend = {
-      ...report,
-      roomNo: parseInt(report.roomNo, 10),
-      status: 'Pending',
-      assignedTo: null,
-      technicianNo: null,
-      isDuplicate: false,
-      duplicateOf: null,
-      attachments: report.attachments || null,
-    };
+    const formData = new FormData();
+    formData.append('studentId', report.studentId);
+    formData.append('title', report.title);
+    formData.append('location', report.location);
+    formData.append('roomNo', parseInt(report.roomNo, 10));
+    formData.append('category', report.category);
+    formData.append('description', report.description);
+    formData.append('status', 'Pending');
+    formData.append('assignedTo', ''); 
+    formData.append('reportedBy', report.reportedBy || JSON.parse(sessionStorage.getItem('user'))?.username); 
+    formData.append('technicianNo', ''); 
+    formData.append('isDuplicate', false);
+    formData.append('duplicateOf', ''); 
+
+    // Append files
+    if (report.attachments && report.attachments.length > 0) {
+      report.attachments.forEach((file, index) => {
+        formData.append('attachments', file);
+      });
+    }
 
     try {
-      const response = await axios.post(API_URL, dataToSend, {
+      const response = await axios.post(API_URL, formData, {
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
       });
       showAlertMessage('Report created successfully!');
@@ -100,7 +120,7 @@ const CreateReport = () => {
         roomNo: '',
         category: '',
         description: '',
-        attachments: null,
+        attachments: [],
       });
     } catch (error) {
       console.error('Error creating report:', error);
@@ -147,7 +167,7 @@ const CreateReport = () => {
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  d="M10 18a8 8 0 100-16 8 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
                   clipRule="evenodd"
                 />
               </svg>
@@ -225,21 +245,38 @@ const CreateReport = () => {
               onChange={handleChange}
               required
             />
-            <Input
-              id="attachments"
-              type="text"
-              name="attachments"
-              label="Attachments"
-              value={report.attachments ? report.attachments.join(', ') : ''}
-              onChange={(e) =>
-                setReport((prev) => ({
-                  ...prev,
-                  attachments: e.target.value
-                    ? e.target.value.split(',').map((url) => url.trim())
-                    : null,
-                }))
-              }
-            />
+            {/* File Input for Attachments */}
+            <div>
+              <label
+                htmlFor="attachments"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Attachments (Optional)
+              </label>
+              <input
+                type="file"
+                id="attachments"
+                name="attachments"
+                multiple
+                accept=".jpg,.jpeg,.png"
+                onChange={handleFileChange}
+                className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
+              />
+              {/* Display Selected Files */}
+              {report.attachments && report.attachments.length > 0 && (
+                <div className="mt-2">
+                  <Typography variant="small" color="gray" className="font-normal">
+                    Selected Files:
+                  </Typography>
+                  <ul className="list-disc list-inside text-sm text-gray-600">
+                    {report.attachments.map((file, index) => (
+                      <li key={index}>{file.name}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
             <Button
               type="submit"
               variant="gradient"

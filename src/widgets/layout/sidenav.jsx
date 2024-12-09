@@ -43,7 +43,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
       >
         <div className="relative flex flex-col h-full">
           <div>
-            <Link to="/" className="py-6 px-8 text-center">
+            <Link className="py-6 px-8 text-center">
               <div className="flex items-center gap-4 justify-center">
                 <img src={brandImg} alt="Brand Logo"  className="h-8"/> 
                 <Typography
@@ -86,8 +86,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 {pages
                 .filter(({ name }) => {
                   if (name === "Admin Report" && user?.role !== "admin") return false;
-                  if (name === "dashboard" && user?.role !== "admin") return false;
-                  if (name === "User dashboard" && user?.role !== "user") return false;
+                  if (name === "Admin Dashboard" && user?.role !== "admin") return false;
+                  if (name === "Dashboard" && user?.role !== "user") return false;
                   if (name === "Create Report" && user?.role !== "user") return false;
                   if (name === "My Report" && user?.role !== "user") return false;
                   return true;
