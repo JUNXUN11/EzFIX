@@ -97,7 +97,7 @@ const AdminReport = () => {
   
   const filteredData = () => {
     return sortedData().filter((item) => {
-      const matchesSearch = item.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = item.location?.toLowerCase().includes(searchTerm.toLowerCase());
       
       let matchesFilter = true;
       if (filterType) {
@@ -110,6 +110,13 @@ const AdminReport = () => {
       
       return matchesSearch && matchesFilter;
     });
+  };
+
+  const getDaysSince = (date) => {
+    const today = new Date();
+    const reportDate = new Date(date);
+    const diffInDays = Math.ceil((today - reportDate) / (1000 * 60 * 60 * 24));
+    return diffInDays;
   };
 
   useEffect(() => {
@@ -210,7 +217,7 @@ const AdminReport = () => {
     const getStatusColor = (status) => {
       const colors = {
         fixed: "bg-green-100 text-green-800",
-        "not fixed": "bg-red-100 text-red-800",
+        rejected: "bg-red-100 text-red-800",
         "in progress": "bg-orange-100 text-orange-800",
         pending: "bg-gray-100 text-gray-800"
       };
@@ -263,7 +270,7 @@ const AdminReport = () => {
     const statusOptions = [
       { value: "in progress", label: "In Progress" },
       { value: "fixed", label: "Fixed" },
-      { value: "not fixed", label: "Not Fixed" },
+      { value: "rejected", label: "Rejected" },
       { value: "pending", label: "Pending" }
     ];
 
@@ -403,7 +410,7 @@ const AdminReport = () => {
           <div className="flex gap-4">
             <input
               type="text"
-              placeholder="Search by name"
+              placeholder="Search by block"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-40 px-3 py-1.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -431,7 +438,7 @@ const AdminReport = () => {
             <table className="w-full min-w-[640px] table-auto">
               <thead>
                 <tr>
-                  {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Status", "Actions"].map((el) => (
+                  {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Days Elapsed", "Status", "Actions"].map((el) => (
                     <th
                       key={el}
                       className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
@@ -495,6 +502,11 @@ const AdminReport = () => {
                         </p>
                       </td>
                       <td className={className}>
+                        <p className="text-sm font-semibold text-gray-600">
+                          {getDaysSince(report.createdAt)} days
+                        </p>
+                      </td>
+                      <td className={className}>
                         <StatusBadge status={report.status} />
                       </td>
                       <td className={className}>
@@ -533,7 +545,7 @@ const AdminReport = () => {
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search by name"
+                placeholder="Search by block"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-300"
