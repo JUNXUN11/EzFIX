@@ -3,11 +3,7 @@ import {
   Card,
   CardHeader,
   CardBody,
-  Typography,
-  Chip,
   Spinner,
-  Tooltip,
-  IconButton,
 } from "@material-tailwind/react";
 import { EyeIcon, CalendarIcon, MapPinIcon } from "lucide-react";
 
@@ -167,14 +163,11 @@ const Report = () => {
             <div>
               <label className="text-sm font-medium text-gray-500">Attachment</label>
               {selectedReport.attachment ? (
-                <a
-                  href={selectedReport.attachment}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
-                >
-                  View Attachment
-                </a>
+                <img
+                  src={selectedReport.attachment}
+                  alt="Attachment"
+                  className="w-full h-auto rounded-lg mt-2"
+                />
               ) : (
                 <p className="text-gray-800">No attachment available.</p>
               )}
