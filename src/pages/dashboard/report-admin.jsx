@@ -258,11 +258,47 @@ const AdminReport = () => {
     return colors[category.toLowerCase()] || "bg-gray-100 text-gray-800";
   };
 
+  const fetchReportImage = async (reportId, fileId) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/v1/reports/${reportId}/attachments/${fileId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      return null;
+    }
+  };
+
   const ReportDetailsCard = ({ report, onClose }) => {
     const [currentStatus, setCurrentStatus] = useState(report.status);
+    const [images, setImages] = useState([]);
+    const [loadingImages, setLoadingImages] = useState(true);
 
     useEffect(() => {
       setCurrentStatus(report.status);
+      const loadImages = async () => {
+        setLoadingImages(true);
+        if (report.attachments && report.attachments.length > 0) {
+          const imagePromises = report.attachments.map(fileId => 
+            fetchReportImage(report.id, fileId)
+          );
+          
+          const loadedImages = await Promise.all(imagePromises);
+          const validImages = loadedImages.filter(img => img !== null);
+          setImages(validImages);
+        }
+        setLoadingImages(false);
+      };
+
+      loadImages();
+
+      // Cleanup function to revoke object URLs
+      return () => {
+        images.forEach(url => URL.revokeObjectURL(url));
+      };
     }, [report.status]);
 
     if (!report) return null;
@@ -333,6 +369,31 @@ const AdminReport = () => {
                 <p className="bg-gray-50 p-4 rounded-lg">{report.description}</p>
               </div>
 
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Attachments</p>
+                {loadingImages ? (
+                  <div className="flex justify-center p-4">
+                    <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                  </div>
+                ) : images.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {images.map((imageUrl, index) => (
+                      <div key={index} className="relative aspect-square">
+                        <img
+                          src={imageUrl}
+                          alt={`Damage report ${index + 1}`}
+                          className="rounded-lg object-cover w-full h-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic text-center p-4">
+                    No attachments available
+                  </p>
+                )}
+              </div>
+              
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-3">Update Status</p>
                 <div className="flex flex-col gap-2">
