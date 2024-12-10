@@ -9,6 +9,10 @@ import {
   Typography,
   Select,
   Option,
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
 } from '@material-tailwind/react';
 import axios from 'axios';
 
@@ -23,12 +27,14 @@ const CreateReport = () => {
     description: '',
     attachments: [], 
   });
+
   const [showAlert, setShowAlert] = useState({
     show: false,
     message: '',
     type: 'success',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [openConfrimDialog, setOpenConfirmDialog] = useState(false);
 
   const API_URL = 'https://theezfixapi.onrender.com/api/v1/reports';
 
@@ -81,8 +87,8 @@ const CreateReport = () => {
     }, 3000);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmitConfirm = async () => {
+    setOpenConfirmDialog(false);
     setIsLoading(true);
 
     const formData = new FormData();
@@ -133,8 +139,58 @@ const CreateReport = () => {
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setOpenConfirmDialog(true);
+  }
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false);
+  }
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen">
+      <Dialog
+        open={openConfrimDialog}
+        handler={handleCloseConfirmDialog}
+        size="sm"
+      >
+        <DialogHeader>Confirm Report Submission</DialogHeader>
+        <DialogBody>
+          Are you sure you want to submit this report? 
+          Please review the details before confirming:
+          <div className="mt-4 bg-gray-100 p-4 rounded-lg">
+            <p><strong>Title:</strong> {report.title}</p>
+            <p><strong>Location:</strong> {report.location}</p>
+            <p><strong>Room Number:</strong> {report.roomNo}</p>
+            <p><strong>Category:</strong> {report.category}</p>
+            <p><strong>Description:</strong> {report.description}</p>
+            {report.attachments && report.attachments.length > 0 && (
+              <p>
+                <strong>Attachments:</strong> {report.attachments.length} file(s)
+              </p>
+            )}
+          </div>
+        </DialogBody>
+        <DialogFooter>
+          <Button
+            variant="text"
+            color="red"
+            onClick={handleCloseConfirmDialog}
+            className="mr-2"
+          >
+            Cancel
+          </Button>
+          <Button 
+            variant="gradient" 
+            color="green" 
+            onClick={handleSubmitConfirm}
+          >
+            Confirm
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
       {showAlert.show && (
         <div
           role="alert"
@@ -245,7 +301,6 @@ const CreateReport = () => {
               onChange={handleChange}
               required
             />
-            {/* File Input for Attachments */}
             <div>
               <label
                 htmlFor="attachments"
@@ -262,7 +317,6 @@ const CreateReport = () => {
                 onChange={handleFileChange}
                 className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
               />
-              {/* Display Selected Files */}
               {report.attachments && report.attachments.length > 0 && (
                 <div className="mt-2">
                   <Typography variant="small" color="gray" className="font-normal">
