@@ -26,6 +26,7 @@ const AdminReport = () => {
   const [updateError, setUpdateError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [shouldFetch, setShouldFetch] = useState(true);
 
   const handleSort = (key) => {
     // Convert key to match the actual data properties
@@ -122,12 +123,20 @@ const AdminReport = () => {
   useEffect(() => {
     fetchReports();
     
-    const intervalId = setInterval(() => {
-      fetchReports();
-    }, 30000);
+    // Fetches every 15 seconds when no report is selected
+    let intervalId = null;
+    if (shouldFetch && !selectedReport) {
+      intervalId = setInterval(() => {
+        fetchReports();
+      }, 15000);
+    }
 
-    return () => clearInterval(intervalId);
-  }, []);
+    return () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [shouldFetch]);
 
   const fetchReports = async () => {
     try {
@@ -155,6 +164,16 @@ const AdminReport = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewReport = (report) => {
+    setShouldFetch(false); 
+    setSelectedReport(report);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedReport(null);
+    setShouldFetch(true); 
   };
 
   const showToast = (message, type = 'success') => {
@@ -185,7 +204,7 @@ const AdminReport = () => {
         throw new Error(errorData.message || 'Failed to update status');
       }
 
-      const updatedReport = await response.json();
+      await fetchReports();
 
       setReports(prevReports => {
         const newReports = prevReports.map(report => 
@@ -572,7 +591,7 @@ const AdminReport = () => {
                       </td>
                       <td className={className}>
                         <button
-                          onClick={() => setSelectedReport(report)}
+                          onClick={() => handleViewReport(report)}
                           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                         >
                           <EyeIcon className="h-4 w-4 text-gray-600" />
@@ -678,7 +697,7 @@ const AdminReport = () => {
       {selectedReport && (
         <ReportDetailsCard
           report={selectedReport}
-          onClose={() => setSelectedReport(null)}
+          onClose={handleCloseDetails}
         />
       )}
       {toast.show && (
