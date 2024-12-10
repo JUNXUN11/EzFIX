@@ -98,7 +98,7 @@ const CreateReport = () => {
     formData.append('roomNo', parseInt(report.roomNo, 10));
     formData.append('category', report.category);
     formData.append('description', report.description);
-    formData.append('status', 'Pending');
+    formData.append('status', 'pending');
     formData.append('assignedTo', ''); 
     formData.append('reportedBy', report.reportedBy || JSON.parse(sessionStorage.getItem('user'))?.username); 
     formData.append('technicianNo', ''); 
