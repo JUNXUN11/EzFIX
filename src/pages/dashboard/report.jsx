@@ -387,9 +387,9 @@ const Report = () => {
                 setSelectedImage(null);
                 setImageIndex(0);
               }}
-              className="absolute top-0 right-0 z-10 bg-white/20 hover:bg-white/40 rounded-full p-2 m-2"
+              className="absolute top-0 right-0 z-10 bg-white/50 hover:bg-white/70 rounded-full p-3 m-4 shadow-lg"
             >
-              <XIcon className="text-white w-8 h-8" />
+              <XIcon className="text-black w-6 h-6 stroke-2" />
             </button>
 
             {/* Main Image */}
