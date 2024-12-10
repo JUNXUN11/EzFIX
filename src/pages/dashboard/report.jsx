@@ -142,12 +142,25 @@ const Report = () => {
           },
         }
       );
-
+  
       if (!response.ok) {
         throw new Error("Failed to delete report. Please try again.");
       }
-
-      setReports(prevReports => prevReports.filter(report => report.id !== reportId));
+  
+      // Update both reports and filteredReports states
+      const updatedReports = reports.filter(report => report.id !== reportId);
+      setReports(updatedReports);
+      
+      // If a filter is active, update filteredReports accordingly
+      if (activeFilter) {
+        const updatedFilteredReports = updatedReports.filter(report => 
+          report.status.toLowerCase() === activeFilter.toLowerCase()
+        );
+        setFilteredReports(updatedFilteredReports);
+      } else {
+        setFilteredReports(updatedReports);
+      }
+  
       setConfirmDelete(null);
     } catch (error) {
       console.error("Error deleting report:", error);
