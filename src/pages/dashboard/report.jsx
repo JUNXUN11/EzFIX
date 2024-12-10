@@ -9,13 +9,17 @@ import { EyeIcon, CalendarIcon, MapPinIcon, ImageIcon, TrashIcon } from "lucide-
 
 const Report = () => {
   const [reports, setReports] = useState([]);
+  const [filteredReports, setFilteredReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [activeFilter, setActiveFilter] = useState(null);
 
-  const getAttachmentUrl = (reportId) => {
+  const statusOptions = ["Pending", "In progress", "Rejected", "Fixed"];
+
+  const getAttachmentUrl = (reportId, attachmentId) => {
     return `http://localhost:8080/api/v1/reports/{reportId}/attachments/{fileId}`;
   };
 
@@ -58,17 +62,31 @@ const Report = () => {
       // Transform attachments to full URLs if needed
       const processedReports = data.map(report => ({
         ...report,
-        attachments: report.attachments.map(attachmentId => 
-          getAttachmentUrl(report.id)
-        )
+        attachments: report.attachments 
+          ? report.attachments.map(attachmentId => 
+              getAttachmentUrl(report.id, attachmentId)
+            )
+          : []
       }));
 
-      setReports(processedReports); 
+      setReports(processedReports);
+      setFilteredReports(processedReports); 
     } catch (error) {
       console.error("Error fetching reports:", error);
       setError(error.message || "Failed to load reports.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const filterReports = (status) => {
+    if (status === activeFilter) {
+      setActiveFilter(null);
+      setFilteredReports(reports);
+    } else {
+      setActiveFilter(status);
+      const filtered = reports.filter(report => report.status.toLowerCase() === status.toLowerCase());
+      setFilteredReports(filtered);
     }
   };
 
@@ -91,7 +109,6 @@ const Report = () => {
         throw new Error("Failed to delete report. Please try again.");
       }
 
-      // Remove the deleted report from the list
       setReports(prevReports => prevReports.filter(report => report.id !== reportId));
       setConfirmDelete(null);
     } catch (error) {
@@ -101,7 +118,6 @@ const Report = () => {
       setLoading(false);
     }
   };
-
 
   const getCategoryColor = (category) => {
     const colors = {
@@ -155,68 +171,97 @@ const Report = () => {
         <p className="text-gray-600 mt-2">Track and manage your maintenance reports</p>
       </div>
 
-      {reports.length === 0 ? (
+      {/* Status Filter Buttons */}
+      <div className="flex justify-start space-x-2 mb-6">
+        {statusOptions.map((status) => (
+          <button
+            key={status}
+            onClick={() => filterReports(status)}
+            className={`
+              px-4 py-2 rounded-full text-sm font-medium transition-all duration-200
+              ${activeFilter === status 
+                ? 'bg-blue-600 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}
+            `}
+          >
+            {status}
+          </button>
+        ))}
+        {activeFilter && (
+          <button
+            onClick={() => {
+              setActiveFilter(null);
+              setFilteredReports(reports);
+            }}
+            className="px-4 py-2 bg-red-200 text-red-700 rounded-full text-sm font-medium hover:bg-red-300"
+          >
+            Clear Filter
+          </button>
+        )}
+      </div>
+
+      {filteredReports.length === 0 ? (
         <div className="text-center py-12 bg-gray-50 rounded-lg">
           <div className="max-w-sm mx-auto">
-            <h3 className="text-xl font-semibold text-gray-700">No Reports Yet</h3>
-            <p className="text-gray-500 mt-2">You haven't submitted any reports yet.</p>
+            <h3 className="text-xl font-semibold text-gray-700">No Reports</h3>
+            <p className="text-gray-500 mt-2">You haven't submitted any reports or no reports match the current filter.</p>
           </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reports.map((report) => (
-            <Card key={report.id} className="hover:shadow-lg transition-shadow duration-300">
-              <CardBody className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                      {report.title}
-                    </h3>
-                    <div className="flex items-center text-gray-600 mb-2">
-                      <MapPinIcon className="h-4 w-4 mr-2" />
-                      <span className="text-sm">{report.location}</span>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredReports.map((report) => (
+              <Card key={report.id} className="hover:shadow-lg transition-shadow duration-300">
+                <CardBody className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                        {report.title}
+                      </h3>
+                      <div className="flex items-center text-gray-600 mb-2">
+                        <MapPinIcon className="h-4 w-4 mr-2" />
+                        <span className="text-sm">{report.location}</span>
+                      </div>
+                      <div className="flex items-center text-gray-600">
+                        <CalendarIcon className="h-4 w-4 mr-2" />
+                        <span className="text-sm">{formatDate(report.createdAt)}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center text-gray-600">
-                      <CalendarIcon className="h-4 w-4 mr-2" />
-                      <span className="text-sm">{formatDate(report.createdAt)}</span>
+            
+                    <div className="flex items-center">
+                      <button
+                        onClick={() => setSelectedReport(report)}
+                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-2"
+                      >
+                        <EyeIcon className="h-5 w-5" />
+                      </button>
+                      {report.status === "Pending" && (
+                        <button
+                          onClick={() => setConfirmDelete(report)}
+                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full"
+                        >
+                          <TrashIcon className="h-5 w-5" />
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  <div className="flex items-center">
-                  <button
-                    onClick={() => setSelectedReport(report)}
-                    className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-2"
-                  >
-                    <EyeIcon className="h-5 w-5" />
-                  </button>
-                  {report.status === "Pending" && (
-                    <button
-                      onClick={() => setConfirmDelete(report)}
-                      className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full"
+                    
+                  <div className="space-y-2">
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(report.category)}`}
                     >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                    )}
+                      {report.category}
+                    </span>
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ml-2 ${getStatusColor(report.status)}`}
+                    >
+                      {report.status}
+                    </span>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <span
-                    className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(report.category)}`}
-                  >
-                    {report.category}
-                  </span>
-                  <span
-                    className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ml-2 ${getStatusColor(report.status)}`}
-                  >
-                    {report.status}
-                  </span>
-                </div>
-              </CardBody>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardBody>
+              </Card>
+            ))}
+          </div>
+        )}
 
     {selectedReport && (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
@@ -242,6 +287,10 @@ const Report = () => {
                         src={attachment}
                         alt={`Attachment ${index + 1}`}
                         className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                        onError={(e) => {
+                          e.target.src = '/path/to/fallback/image.png'; // Add a fallback image path???
+                          console.error(`Failed to load attachment: ${attachment}`);
+                        }}
                         onClick={() => setSelectedImage(attachment)}
                       />
                     ))}
