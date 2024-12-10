@@ -107,7 +107,7 @@ const CreateReport = () => {
 
     // Append files
     if (report.attachments && report.attachments.length > 0) {
-      report.attachments.forEach((file, index) => {
+      report.attachments.forEach((file) => {
         formData.append('attachments', file);
       });
     }
@@ -119,6 +119,7 @@ const CreateReport = () => {
         },
       });
       showAlertMessage('Report created successfully!');
+
       setReport({
         studentId: report.studentId,
         title: '',
@@ -128,6 +129,12 @@ const CreateReport = () => {
         description: '',
         attachments: [],
       });
+
+      // Reset the file input 
+      if (document.getElementById('attachments')) {
+        document.getElementById('attachments').value = ''; // Clear the file input
+      }
+      
     } catch (error) {
       console.error('Error creating report:', error);
       showAlertMessage(
