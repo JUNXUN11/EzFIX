@@ -5,7 +5,7 @@ import {
   CardBody,
   Spinner,
 } from "@material-tailwind/react";
-import { EyeIcon, CalendarIcon, MapPinIcon, ImageIcon, TrashIcon } from "lucide-react";
+import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
 const Report = () => {
   const [reports, setReports] = useState([]);
@@ -13,19 +13,52 @@ const Report = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
+  const [images, setImages] = useState(null);
+  const [loadingImages, setLoadingImages] = useState(0);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [activeFilter, setActiveFilter] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imageIndex, setImageIndex] = useState(0);
 
   const statusOptions = ["Pending", "In progress", "Rejected", "Fixed"];
-
-  const getAttachmentUrl = (reportId, attachmentId) => {
-    return `http://localhost:8080/api/v1/reports/{reportId}/attachments/{fileId}`;
-  };
 
   useEffect(() => {
     fetchReports();
   }, []);
+
+  useEffect(() => {
+    const loadImages = async () => {
+      if (reports.length > 0) {
+        const imagePromises = reports.map(report => 
+          Promise.all(
+            report.attachments.map(fileId => fetchReportImage(report.id, fileId))
+          )
+        );
+        
+        const allLoadedImages = await Promise.all(imagePromises);
+        const validImages = allLoadedImages.map(reportImages => 
+          reportImages.filter(img => img !== null)
+        );
+        
+        // Create a mapping of report IDs to their images
+        const reportImagesMap = reports.reduce((acc, report, index) => {
+          acc[report.id] = validImages[index];
+          return acc;
+        }, {});
+  
+        setImages(reportImagesMap);
+      }
+    };
+  
+    loadImages();
+  
+    return () => {
+      // Clean up object URLs if needed
+      if (images) {
+        Object.values(images).flat().forEach(url => URL.revokeObjectURL(url));
+      }
+    };
+  }, [reports]);
 
   const fetchReports = async () => {
     try {
@@ -48,35 +81,40 @@ const Report = () => {
       }
       const data = await response.json();
 
-      const statusPriority = {
-        "Pending": 1,
-        "In progress": 2,
-        "Rejected": 3,
-        "Fixed": 4
-      };
-
-      const sortedReports = data.sort((a, b) => 
-        statusPriority[a.status] - statusPriority[b.status]
-      );
-      
-      // Transform attachments to full URLs if needed
-      const processedReports = data.map(report => ({
-        ...report,
-        attachments: report.attachments 
-          ? report.attachments.map(attachmentId => 
-              getAttachmentUrl(report.id, attachmentId)
-            )
-          : []
-      }));
-
-      setReports(processedReports);
-      setFilteredReports(processedReports); 
+      setReports(data);
+      setFilteredReports(data); 
     } catch (error) {
       console.error("Error fetching reports:", error);
       setError(error.message || "Failed to load reports.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchReportImage = async (reportId, fileId) => {
+    try {
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}/attachments/${fileId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      return null;
+    }
+  };
+
+  const navigateImage = (direction) => {
+    if (!selectedReport || !images || !images[selectedReport.id]) return;
+  
+    const currentImages = images[selectedReport.id];
+    const newIndex = direction === 'next' 
+      ? (imageIndex + 1) % currentImages.length
+      : (imageIndex - 1 + currentImages.length) % currentImages.length;
+  
+    setSelectedImage(currentImages[newIndex]);
+    setImageIndex(newIndex);
   };
 
   const filterReports = (status) => {
@@ -275,30 +313,36 @@ const Report = () => {
               <p className="text-gray-800">{selectedReport.description || "No description provided."}</p>
             </div>
             <div>
-              <label className="text-sm font-medium text-gray-500 flex items-center">
-                <ImageIcon className="h-4 w-4 mr-2"/>
-                Attachments
-              </label>
-              {selectedReport.attachment && selectedReport.attachments.length > 0 ? (
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                    {selectedReport.attachments.map((attachment, index) => (
+                <p className="text-sm text-gray-500 mb-2">Attachments</p>
+                {loadingImages ? (
+                  <div className="flex justify-center p-4">
+                    <Spinner className="h-6 w-6" />
+                  </div>
+              ) : images && images[selectedReport.id] && images[selectedReport.id].length > 0 ? (
+                <div className="grid grid-cols-2 gap-4">
+                  {images[selectedReport.id].map((imageUrl, index) => (
+                    <div 
+                      key={index} 
+                      className="relative aspect-square cursor-pointer"
+                      onClick={() => {
+                        setSelectedImage(imageUrl);
+                        setImageIndex(index);
+                      }}
+                    >
                       <img
-                        key={index}
-                        src={attachment}
-                        alt={`Attachment ${index + 1}`}
-                        className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                        onError={(e) => {
-                          e.target.src = '/path/to/fallback/image.png'; // Add a fallback image path???
-                          console.error(`Failed to load attachment: ${attachment}`);
-                        }}
-                        onClick={() => setSelectedImage(attachment)}
+                        src={imageUrl}
+                        alt={`Damage report ${index + 1}`}
+                        className="rounded-lg object-cover w-full h-full"
                       />
-                    ))}
+                    </div>
+                  ))}
                 </div>
               ) : (
-                <p className="text-gray-800">No attachment available.</p>
+                <p className="text-sm text-gray-500 italic text-center p-4">
+                  No attachments available
+                </p>
               )}
-            </div>
+              </div>
             <button
               onClick={() => setSelectedReport(null)}
               className="w-full mt-6 bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200"
@@ -311,20 +355,61 @@ const Report = () => {
     )}
     {selectedImage && (
         <div 
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4 cursor-pointer"
-          onClick={() => setSelectedImage(null)}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4"
         >
-          <img
-            src={selectedImage}
-            alt="Full Image"
-            className="max-w-full max-h-full object-contain"
-            onError={(e) => {
-              e.target.src = 'path/to/fallback/image.png'; // Add a fallback image
-              console.error(`Failed to load full image: ${selectedImage}`);
-            }}
-          />
+          <div className="relative max-w-full max-h-full flex items-center">
+            {/* Previous Image Button */}
+            {selectedReport.attachments.length > 1 && (
+              <button 
+                onClick={() => navigateImage('prev')}
+                className="absolute left-0 z-10 bg-white/20 hover:bg-white/40 rounded-full p-2 m-2"
+              >
+                <ChevronLeftIcon className="text-white w-8 h-8" />
+              </button>
+            )}
+
+            {/* Close Button */}
+            <button 
+              onClick={() => {
+                setSelectedImage(null);
+                setImageIndex(0);
+              }}
+              className="absolute top-0 right-0 z-10 bg-white/20 hover:bg-white/40 rounded-full p-2 m-2"
+            >
+              <XIcon className="text-white w-8 h-8" />
+            </button>
+
+            {/* Main Image */}
+            <img
+              src={selectedImage}
+              alt={`Attachment ${imageIndex + 1}`}
+              className="max-w-full max-h-full object-contain"
+              onError={(e) => {
+                e.target.src = '/path/to/fallback/image.png';
+                console.error(`Failed to load full image: ${selectedImage}`);
+              }}
+            />
+
+            {/* Next Image Button */}
+            {selectedReport.attachments.length > 1 && (
+              <button 
+                onClick={() => navigateImage('next')}
+                className="absolute right-0 z-10 bg-white/20 hover:bg-white/40 rounded-full p-2 m-2"
+              >
+                <ChevronRightIcon className="text-white w-8 h-8" />
+              </button>
+            )}
+
+            {/* Image Counter */}
+            {selectedReport.attachments.length > 1 && (
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full mb-4">
+                {`${imageIndex + 1} / ${selectedReport.attachments.length}`}
+              </div>
+            )}
+          </div>
         </div>
       )}
+
       
       {confirmDelete && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-50 p-4">
