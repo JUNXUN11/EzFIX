@@ -5,7 +5,7 @@ import {
   CardBody,
   Spinner,
 } from "@material-tailwind/react";
-import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 
 const capitalizeFirstLetter = (string) => {
   if (!string) return '';
@@ -331,6 +331,18 @@ const Report = () => {
               <label className="text-sm font-medium text-gray-500">Description</label>
               <p className="text-gray-800">{selectedReport.description || "No description provided."}</p>
             </div>
+
+            {console.log('Selected Report:', selectedReport)}
+            {selectedReport.comment && selectedReport.comment.trim() && (
+            <div className="bg-gray-100 rounded-lg p-4">
+              <div className="flex items-center mb-2">
+                <MessageSquareIcon className="h-5 w-5 mr-2 text-gray-600" />
+                <label className="text-sm font-medium text-gray-600">Admin Comment</label>
+              </div>
+              <p className="text-gray-800 italic">{selectedReport.comment}</p>
+            </div>
+            )}
+
             <div>
                 <p className="text-sm text-gray-500 mb-2">Attachments</p>
                 {loadingImages ? (
@@ -372,6 +384,7 @@ const Report = () => {
         </Card>
       </div>
     )}
+
     {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4"
