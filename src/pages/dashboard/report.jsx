@@ -7,6 +7,11 @@ import {
 } from "@material-tailwind/react";
 import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 
+const capitalizeFirstLetter = (string) => {
+  if (!string) return '';
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
+};
+  
 const Report = () => {
   const [reports, setReports] = useState([]);
   const [filteredReports, setFilteredReports] = useState([]);
@@ -154,7 +159,7 @@ const Report = () => {
       // If a filter is active, update filteredReports accordingly
       if (activeFilter) {
         const updatedFilteredReports = updatedReports.filter(report => 
-          report.status.toLowerCase() === activeFilter.toLowerCase()
+          report.status === activeFilter
         );
         setFilteredReports(updatedFilteredReports);
       } else {
@@ -235,7 +240,7 @@ const Report = () => {
                 : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}
             `}
           >
-            {status}
+            {capitalizeFirstLetter(status)}
           </button>
         ))}
         {activeFilter && (
@@ -285,7 +290,8 @@ const Report = () => {
                       >
                         <EyeIcon className="h-5 w-5" />
                       </button>
-                      {report.status === "Pending" && (
+                      {console.log('Report status:', report.status)}
+                      {report.status.toLowerCase() === "pending" && (
                         <button
                           onClick={() => setConfirmDelete(report)}
                           className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full"
@@ -305,7 +311,7 @@ const Report = () => {
                     <span
                       className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ml-2 ${getStatusColor(report.status)}`}
                     >
-                      {report.status}
+                      {capitalizeFirstLetter(report.status)}
                     </span>
                   </div>
                 </CardBody>
