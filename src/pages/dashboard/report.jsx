@@ -384,7 +384,7 @@ const Report = () => {
         </Card>
       </div>
     )}
-
+    
     {selectedImage && (
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4"
