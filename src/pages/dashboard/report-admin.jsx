@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+import React, { useState, useEffect, useRef } from 'react';
+import { EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 const Toast = ({ message, type, onClose }) => {
   return (
@@ -291,13 +291,28 @@ const AdminReport = () => {
     }
   };
 
-  const ReportDetailsCard = ({ report, onClose }) => {
+  const ReportDetailsCard = ({ report, onClose, fetchReports }) => {
     const [currentStatus, setCurrentStatus] = useState(report.status);
     const [images, setImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
+    const [comment, setComment] = useState(report.comment || '');
+    const [newComment, setNewComment] = useState('');
+    const [isCommenting, setIsCommenting] = useState(false);
+    const [commentError, setCommentError] = useState(null);
+    const cardRef = useRef(null);
 
     useEffect(() => {
       setCurrentStatus(report.status);
+      setComment(report.comment || '');
+
+      const handleClickOutside = (event) => {
+        if (cardRef.current && !cardRef.current.contains(event.target)) {
+          onClose();
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      
       const loadImages = async () => {
         setLoadingImages(true);
         if (report.attachments && report.attachments.length > 0) {
@@ -317,6 +332,7 @@ const AdminReport = () => {
       // Cleanup function to revoke object URLs
       return () => {
         images.forEach(url => URL.revokeObjectURL(url));
+        document.removeEventListener('mousedown', handleClickOutside);
       };
     }, [report.status]);
 
@@ -335,9 +351,49 @@ const AdminReport = () => {
       setCurrentStatus(newStatus);
     };
 
+    const handleAddComment = async () => {
+      if (!newComment.trim()) {
+        setCommentError('Comment cannot be empty');
+        return;
+      }
+  
+      setIsCommenting(true);
+      setCommentError(null);
+      
+      try {
+        const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${report.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ comment: newComment})
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to add comment');
+        }
+
+        await fetchReports();
+        
+        setNewComment('');
+        showToast('Comment added successfully', 'success');
+  
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        setCommentError(error.message || 'Failed to add comment. Please try again.');
+        showToast('Failed to add comment', 'error');
+      } finally {
+        setIsCommenting(false);
+      }
+    };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          ref={cardRef}
+          className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        >
           <div className="p-6 space-y-6">
             <div className="flex justify-between items-start">
               <h2 className="text-2xl font-bold text-gray-900">Report Details</h2>
@@ -440,6 +496,50 @@ const AdminReport = () => {
                 </div>
                 {updateError && (
                   <p className="text-red-500 text-sm mt-2">{updateError}</p>
+                )}
+              </div>
+
+              <div className="p-6 border-t">
+                <h3 className="text-lg font-semibold mb-4">Comments</h3>
+                
+                {/* Existing Comment Display */}
+                {comment && (
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p className="text-gray-700">{comment}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Added on {new Date(report.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                
+                {/* New Comment Input */}
+                <div className="flex items-start space-x-3">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => {
+                      setNewComment(e.target.value);
+                      setCommentError(null);
+                    }}
+                    placeholder="Add a comment..."
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[100px]"
+                    disabled={isCommenting}
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    disabled={isCommenting || !newComment.trim()}
+                    className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    {isCommenting ? (
+                      <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                    ) : (
+                      <PaperAirplaneIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                
+                {/* Error Message */}
+                {commentError && (
+                  <p className="text-red-500 text-sm mt-2">{commentError}</p>
                 )}
               </div>
             </div>
@@ -698,6 +798,7 @@ const AdminReport = () => {
         <ReportDetailsCard
           report={selectedReport}
           onClose={handleCloseDetails}
+          fetchReports={fetchReports}
         />
       )}
       {toast.show && (
