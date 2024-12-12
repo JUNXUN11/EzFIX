@@ -87,9 +87,10 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 .filter(({ name }) => {
                   if (name === "Admin Report" && user?.role !== "admin") return false;
                   if (name === "Admin Dashboard" && user?.role !== "admin") return false;
+                  if (name === "Annoucements" && user?.role !== "admin") return false;
                   if (name === "Dashboard" && user?.role !== "user") return false;
                   if (name === "Create Report" && user?.role !== "user") return false;
-                  if (name === "My Report" && user?.role !== "user") return false;
+                  if (name === "My Report" && user?.role !== "user") return false;                
                   return true;
                 })
                 .map(({ icon, name, path }) => (
