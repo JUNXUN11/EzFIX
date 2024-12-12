@@ -291,7 +291,7 @@ const AdminReport = () => {
     }
   };
 
-  const ReportDetailsCard = ({ report, onClose, fetchReports }) => {
+  const ReportDetailsCard = ({ report, onClose }) => {
     const [currentStatus, setCurrentStatus] = useState(report.status);
     const [images, setImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
@@ -798,7 +798,6 @@ const AdminReport = () => {
         <ReportDetailsCard
           report={selectedReport}
           onClose={handleCloseDetails}
-          fetchReports={fetchReports}
         />
       )}
       {toast.show && (
