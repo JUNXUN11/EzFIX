@@ -16,7 +16,7 @@ export function Home() {
   const { pieChartData } = useReportTrends();
 
   return (
-    <div className="mt-12 grid gap-6 grid-cols-1 lg:grid-cols-2">
+    <div className="mt-12 grid gap-6 grid-cols-1 lg:grid-cols-2 w-full">
       
       {/* Report Overview Section */}
       <div className="p-6 bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">

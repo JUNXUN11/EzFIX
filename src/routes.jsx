@@ -7,7 +7,7 @@ import {
   RectangleStackIcon,
   PencilSquareIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Notifications } from "@/pages/dashboard";
+import { Home, Profile, Announcements } from "@/pages/dashboard";
 import AdminReport from "./pages/dashboard/report-admin"
 import Report from "./pages/dashboard/report";
 import CreateReport from "./pages/dashboard/CreateReport";
@@ -86,11 +86,11 @@ export const routes = [
       },
       {
         icon: <InformationCircleIcon {...icon} />,
-        name: "notifications",
-        path: "/notifications",
+        name: "announcements",
+        path: "/announcements",
         element: (
-          <ProtectedRoute>
-            <Notifications />
+          <ProtectedRoute requiredRole="admin">
+            <Announcements />
           </ProtectedRoute>
         ),
       },
