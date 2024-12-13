@@ -161,7 +161,17 @@ export function Profile() {
                   variant="h6"
                   className="font-medium text-blue-gray-600"
                 >
-                  {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  {isEditing ? (
+                    <Input
+                      type="text"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleInputChange}
+                      className="text-lg"
+                    />
+                  ) : (
+                    user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                  )}
                 </Typography>
                 {!isEditing && (
                   <Button

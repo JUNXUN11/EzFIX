@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+import React, { useState, useEffect, useRef } from 'react';
+import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 const Toast = ({ message, type, onClose }) => {
   return (
@@ -97,7 +97,7 @@ const AdminReport = () => {
   
   const filteredData = () => {
     return sortedData().filter((item) => {
-      const matchesSearch = item.reportedBy?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = item.location?.toLowerCase().includes(searchTerm.toLowerCase());
       
       let matchesFilter = true;
       if (filterType) {
@@ -112,19 +112,21 @@ const AdminReport = () => {
     });
   };
 
+  const getDaysSince = (date) => {
+    const today = new Date();
+    const reportDate = new Date(date);
+    const diffInDays = Math.ceil((today - reportDate) / (1000 * 60 * 60 * 24));
+    return diffInDays;
+  };
+
   useEffect(() => {
     fetchReports();
-    
-    const intervalId = setInterval(() => {
-      fetchReports();
-    }, 30000);
-
-    return () => clearInterval(intervalId);
   }, []);
 
   const fetchReports = async () => {
     try {
       setLoading(true); 
+      setError(null);
       const response = await fetch('https://theezfixapi.onrender.com/api/v1/reports');
       
       if (!response.ok) {
@@ -148,6 +150,14 @@ const AdminReport = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewReport = (report) => {
+    setSelectedReport(report);
+  };
+
+  const handleCloseDetails = () => {
+    setSelectedReport(null);
   };
 
   const showToast = (message, type = 'success') => {
@@ -178,7 +188,7 @@ const AdminReport = () => {
         throw new Error(errorData.message || 'Failed to update status');
       }
 
-      const updatedReport = await response.json();
+      await fetchReports();
 
       setReports(prevReports => {
         const newReports = prevReports.map(report => 
@@ -210,7 +220,7 @@ const AdminReport = () => {
     const getStatusColor = (status) => {
       const colors = {
         fixed: "bg-green-100 text-green-800",
-        "not fixed": "bg-red-100 text-red-800",
+        rejected: "bg-red-100 text-red-800",
         "in progress": "bg-orange-100 text-orange-800",
         pending: "bg-gray-100 text-gray-800"
       };
@@ -251,11 +261,63 @@ const AdminReport = () => {
     return colors[category.toLowerCase()] || "bg-gray-100 text-gray-800";
   };
 
+  const fetchReportImage = async (reportId, fileId) => {
+    try {
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}/attachments/${fileId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      const blob = await response.blob();
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error fetching image:', error);
+      return null;
+    }
+  };
+
   const ReportDetailsCard = ({ report, onClose }) => {
     const [currentStatus, setCurrentStatus] = useState(report.status);
+    const [images, setImages] = useState([]);
+    const [loadingImages, setLoadingImages] = useState(true);
+    const [comment, setComment] = useState(report.comment || '');
+    const [newComment, setNewComment] = useState('');
+    const [isCommenting, setIsCommenting] = useState(false);
+    const [commentError, setCommentError] = useState(null);
+    const cardRef = useRef(null);
 
     useEffect(() => {
       setCurrentStatus(report.status);
+      setComment(report.comment || '');
+
+      const handleClickOutside = (event) => {
+        if (cardRef.current && !cardRef.current.contains(event.target)) {
+          onClose();
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      
+      const loadImages = async () => {
+        setLoadingImages(true);
+        if (report.attachments && report.attachments.length > 0) {
+          const imagePromises = report.attachments.map(fileId => 
+            fetchReportImage(report.id, fileId)
+          );
+          
+          const loadedImages = await Promise.all(imagePromises);
+          const validImages = loadedImages.filter(img => img !== null);
+          setImages(validImages);
+        }
+        setLoadingImages(false);
+      };
+
+      loadImages();
+
+      // Cleanup function to revoke object URLs
+      return () => {
+        images.forEach(url => URL.revokeObjectURL(url));
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
     }, [report.status]);
 
     if (!report) return null;
@@ -263,7 +325,7 @@ const AdminReport = () => {
     const statusOptions = [
       { value: "in progress", label: "In Progress" },
       { value: "fixed", label: "Fixed" },
-      { value: "not fixed", label: "Not Fixed" },
+      { value: "rejected", label: "Rejected" },
       { value: "pending", label: "Pending" }
     ];
 
@@ -273,9 +335,49 @@ const AdminReport = () => {
       setCurrentStatus(newStatus);
     };
 
+    const handleAddComment = async () => {
+      if (!newComment.trim()) {
+        setCommentError('Comment cannot be empty');
+        return;
+      }
+  
+      setIsCommenting(true);
+      setCommentError(null);
+      
+      try {
+        const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${report.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ comment: newComment})
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to add comment');
+        }
+
+        await fetchReports();
+        
+        setNewComment('');
+        showToast('Comment added successfully', 'success');
+  
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        setCommentError(error.message || 'Failed to add comment. Please try again.');
+        showToast('Failed to add comment', 'error');
+      } finally {
+        setIsCommenting(false);
+      }
+    };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          ref={cardRef}
+          className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        >
           <div className="p-6 space-y-6">
             <div className="flex justify-between items-start">
               <h2 className="text-2xl font-bold text-gray-900">Report Details</h2>
@@ -326,6 +428,31 @@ const AdminReport = () => {
                 <p className="bg-gray-50 p-4 rounded-lg">{report.description}</p>
               </div>
 
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Attachments</p>
+                {loadingImages ? (
+                  <div className="flex justify-center p-4">
+                    <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                  </div>
+                ) : images.length > 0 ? (
+                  <div className="grid grid-cols-2 gap-4">
+                    {images.map((imageUrl, index) => (
+                      <div key={index} className="relative aspect-square">
+                        <img
+                          src={imageUrl}
+                          alt={`Damage report ${index + 1}`}
+                          className="rounded-lg object-cover w-full h-full"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 italic text-center p-4">
+                    No attachments available
+                  </p>
+                )}
+              </div>
+              
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-3">Update Status</p>
                 <div className="flex flex-col gap-2">
@@ -353,6 +480,50 @@ const AdminReport = () => {
                 </div>
                 {updateError && (
                   <p className="text-red-500 text-sm mt-2">{updateError}</p>
+                )}
+              </div>
+
+              <div className="p-6 border-t">
+                <h3 className="text-lg font-semibold mb-4">Comments</h3>
+                
+                {/* Existing Comment Display */}
+                {comment && (
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p className="text-gray-700">{comment}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Added on {new Date(report.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                
+                {/* New Comment Input */}
+                <div className="flex items-start space-x-3">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => {
+                      setNewComment(e.target.value);
+                      setCommentError(null);
+                    }}
+                    placeholder="Add a comment..."
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[100px]"
+                    disabled={isCommenting}
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    disabled={isCommenting || !newComment.trim()}
+                    className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    {isCommenting ? (
+                      <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                    ) : (
+                      <PaperAirplaneIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                
+                {/* Error Message */}
+                {commentError && (
+                  <p className="text-red-500 text-sm mt-2">{commentError}</p>
                 )}
               </div>
             </div>
@@ -403,7 +574,7 @@ const AdminReport = () => {
           <div className="flex gap-4">
             <input
               type="text"
-              placeholder="Search by name"
+              placeholder="Search by block"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-40 px-3 py-1.5 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -424,6 +595,13 @@ const AdminReport = () => {
                 </option>
               ))}
             </select>
+            <button
+              onClick={fetchReports}
+              className="flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors"
+              title="Refresh Reports"
+            >
+              <ArrowPathIcon className="h-5 w-5 text-gray-700" />
+            </button>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -431,7 +609,7 @@ const AdminReport = () => {
             <table className="w-full min-w-[640px] table-auto">
               <thead>
                 <tr>
-                  {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Status", "Actions"].map((el) => (
+                  {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Days Elapsed", "Status", "Actions"].map((el) => (
                     <th
                       key={el}
                       className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
@@ -495,11 +673,16 @@ const AdminReport = () => {
                         </p>
                       </td>
                       <td className={className}>
+                        <p className="text-sm font-semibold text-gray-600">
+                          {getDaysSince(report.createdAt)} days
+                        </p>
+                      </td>
+                      <td className={className}>
                         <StatusBadge status={report.status} />
                       </td>
                       <td className={className}>
                         <button
-                          onClick={() => setSelectedReport(report)}
+                          onClick={() => handleViewReport(report)}
                           className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                         >
                           <EyeIcon className="h-4 w-4 text-gray-600" />
@@ -533,7 +716,7 @@ const AdminReport = () => {
               <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search by name"
+                placeholder="Search by block"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-300"
@@ -557,6 +740,14 @@ const AdminReport = () => {
                   </option>
                 ))}
               </select>
+              <button
+                onClick={fetchReports}
+                className="mt-4 flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors w-full"
+                title="Refresh Reports"
+              >
+                <ArrowPathIcon className="h-5 w-5 text-gray-700" />
+                <span className="ml-2 text-gray-700">Refresh</span>
+              </button>
             </div>
           </div>
         {filteredData().map((report) => (
@@ -605,7 +796,7 @@ const AdminReport = () => {
       {selectedReport && (
         <ReportDetailsCard
           report={selectedReport}
-          onClose={() => setSelectedReport(null)}
+          onClose={handleCloseDetails}
         />
       )}
       {toast.show && (

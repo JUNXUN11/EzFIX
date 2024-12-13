@@ -7,13 +7,13 @@ import {
   RectangleStackIcon,
   PencilSquareIcon,
 } from "@heroicons/react/24/solid";
-import { Home, Profile, Announcements } from "@/pages/dashboard";
+import { Home, Profile, Announcements} from "@/pages/dashboard";
 import AdminReport from "./pages/dashboard/report-admin"
 import Report from "./pages/dashboard/report";
 import CreateReport from "./pages/dashboard/CreateReport";
 import { SignIn, SignUp } from "@/pages/auth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
-import UserHome from "@/pages/dashboard/UserHome"; // Import the new UserHome component
+import UserHome from "@/pages/dashboard/UserHome"; 
 
 
 const icon = {
@@ -86,11 +86,11 @@ export const routes = [
       },
       {
         icon: <InformationCircleIcon {...icon} />,
-        name: "announcements",
+        name: "Announcements",
         path: "/announcements",
         element: (
-          <ProtectedRoute requiredRole="admin">
-            <Announcements />
+            <ProtectedRoute requiredRole="admin">
+            <Announcements/>
           </ProtectedRoute>
         ),
       },

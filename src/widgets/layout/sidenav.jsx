@@ -48,7 +48,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
         </IconButton>
       </nav>
 
-
       {/* Sidenav */}
       <aside
         className={`${sidenavTypes["white"]} ${
@@ -57,13 +56,10 @@ export function Sidenav({ brandImg, brandName, routes }) {
       >
         <div className="relative flex flex-col h-full">
           <div>
-            <Link className="py-6 px-8 text-center">
+            <Link to="/" className="py-6 px-8 text-center">
               <div className="flex items-center gap-4 justify-center">
                 <img src={brandImg} alt="Brand Logo" className="h-8" />
-                <Typography
-                  variant="h6"
-                  color="blue-gray"
-                >
+                <Typography variant="h6" color="blue-gray">
                   {brandName}
                 </Typography>
               </div>
@@ -99,40 +95,31 @@ export function Sidenav({ brandImg, brandName, routes }) {
                   )}
                   {pages
                     .filter(({ name }) => {
-                      if (name === "Admin Report" && user?.role !== "admin")
-                        return false;
-                      if (name === "Admin Dashboard" && user?.role !== "admin")
-                        return false;
-                      if (name === "Dashboard" && user?.role !== "user")
-                        return false;
-                      if (name === "Create Report" && user?.role !== "user")
-                        return false;
-                      if (name === "My Report" && user?.role !== "user")
-                        return false;
+                      if (name === "Admin Report" && user?.role !== "admin") return false;
+                      if (name === "Admin Dashboard" && user?.role !== "admin") return false;
+                      if (name === "Announcements" && user?.role !== "admin") return false;
+                      if (name === "Dashboard" && user?.role !== "user") return false;
+                      if (name === "Create Report" && user?.role !== "user") return false;
+                      if (name === "My Report" && user?.role !== "user") return false;
                       return true;
                     })
                     .map(({ icon, name, path }) => (
                       <li key={name}>
-                        <NavLink
-                          to={`/${layout}${path}`}
-                          onClick={() => setIsSidenavOpen(false)} // Close sidenav after navigation on mobile
-                        >
-                          {({ isActive }) => (
-                            <Button
-                              variant={isActive ? "gradient" : "text"}
-                              color={isActive ? "black" : "blue-gray"}
-                              className="flex items-center gap-4 px-4 capitalize"
-                              fullWidth
+                        <NavLink to={`/${layout}${path}`} activeClassName="bg-blue-gray-800 text-white">
+                          <Button
+                            variant="text"
+                            color="blue-gray"
+                            className="flex items-center gap-4 px-4 capitalize"
+                            fullWidth
+                          >
+                            {icon}
+                            <Typography
+                              color="inherit"
+                              className="font-medium capitalize"
                             >
-                              {icon}
-                              <Typography
-                                color="inherit"
-                                className="font-medium capitalize"
-                              >
-                                {name}
-                              </Typography>
-                            </Button>
-                          )}
+                              {name}
+                            </Typography>
+                          </Button>
                         </NavLink>
                       </li>
                     ))}
