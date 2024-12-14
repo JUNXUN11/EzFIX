@@ -53,7 +53,7 @@ export function useStatisticsCardsData() {
           {
             color: "yellow",
             icon: ClipboardDocumentListIcon,
-            title: "New Report",
+            title: "New Reports",
             value: newReports.toString(),
           },
           {
