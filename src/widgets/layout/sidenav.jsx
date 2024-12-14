@@ -81,7 +81,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
             {routes
               .filter((route) => route.layout !== "auth") // Filter out "auth" routes
               .map(({ layout, title, pages }, key) => (
-                <ul key={key} className="mb-4 flex flex-col gap-1">
+                <ul key={key} className="mb-4 flex flex-col gap-4">
                   {title && (
                     <li className="mx-3.5 mt-4 mb-2">
                       <Typography
@@ -109,7 +109,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
                         to={`/${layout}${path}`}
                         className={({ isActive }) =>
                           `flex items-center gap-4 px-4 capitalize rounded-lg ${
-                            isActive ? "bg-black text-white shadow-md" : "hover:bg-gray-100 text-blue-gray-700"
+                            isActive ? "bg-black text-white shadow-md" : "hover:text-blue-gray-700"
                           }`
                         }
                       >

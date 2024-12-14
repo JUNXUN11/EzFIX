@@ -125,9 +125,21 @@ export const AuthProvider = ({ children }) => {
             justifyContent: "center",
             alignItems: "center",
             height: "100vh",
+            backgroundColor: "rgba(255, 255, 255, 0.8)", 
           }}
         >
-          <ClipLoader size={50} color="#123abc" loading={loading} />
+          <ClipLoader 
+            size={80}  // Increased size
+            color="#000000" 
+            loading={loading}
+            cssOverride={{
+              borderWidth: '8px',  // Increases the width/thickness of the loader
+              borderTopColor: '#000000',
+              borderBottomColor: '#000000',
+              borderLeftColor: '#000000',
+              borderRightColor: '#000000',
+            }}
+          />
         </div>
       ) : (
         children
