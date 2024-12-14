@@ -42,7 +42,7 @@ export function Profile() {
   const handleProfilePictureChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
+  
     // Validate file
     if (file.size > 5 * 1024 * 1024) { // 5MB max size
       alert("File size must be less than 5MB.");
@@ -52,10 +52,10 @@ export function Profile() {
       alert("Only JPG and PNG formats are supported.");
       return;
     }
-
+  
     const formData = new FormData();
-    formData.append("profilePicture", file);
-
+    formData.append("file", file);
+  
     try {
       const response = await fetch(
         `https://theezfixapi.onrender.com/api/v1/users/${user.id}/profile-image`,
@@ -64,22 +64,26 @@ export function Profile() {
           body: formData,
         }
       );
-
+  
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Upload failed");
       }
-
+  
       const updatedUser = await response.json();
-      setUser(updatedUser);
-      setProfilePicture(updatedUser.profilePicture);
-
+      console.log(updatedUser); // Debug the response
+  
+      setUser(updatedUser); // Update global user state
+      setProfilePicture(updatedUser.file); // Use the 'file' key here
+  
       alert("Profile picture updated successfully!");
     } catch (error) {
       console.error("Error uploading profile picture:", error.message);
       alert(`Error: ${error.message}`);
     }
   };
+  
+  
 
   const handleSave = async () => {
     try {
@@ -124,7 +128,7 @@ export function Profile() {
   return (
     <>
       <div className="relative mt-8 h-72 w-full overflow-hidden rounded-xl bg-[url('/img/background.jpg')] bg-cover bg-center"></div>
-      <Card className="mx-3 -mt-20 mb-6 lg:mx-4 shadow-lg md:mx-8 xl:mx-12">
+      <Card className="mx-3 -mt-20 mb-6 lg:mx-4 shadow-lg md:mx-8 xl:mx-12 p-6">
         <CardBody className="p-4 mb-10">
           {/* Profile Header */}
           <div className="flex flex-col items-start gap-6 ml-10 md:flex-row md:items-center md:gap-8">
@@ -161,17 +165,7 @@ export function Profile() {
                   variant="h6"
                   className="font-medium text-blue-gray-600"
                 >
-                  {isEditing ? (
-                    <Input
-                      type="text"
-                      name="role"
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      className="text-lg"
-                    />
-                  ) : (
-                    user.role.charAt(0).toUpperCase() + user.role.slice(1)
-                  )}
+                  {formData.role}
                 </Typography>
                 {!isEditing && (
                   <Button

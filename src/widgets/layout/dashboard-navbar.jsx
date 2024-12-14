@@ -4,19 +4,14 @@ import { useLocation, Link } from "react-router-dom";
 import {
   Navbar,
   Typography,
-  IconButton,
   Breadcrumbs,
-  Menu,
-  MenuList,
-  MenuItem,
   Avatar,
 } from "@material-tailwind/react";
-import { ClockIcon} from "@heroicons/react/24/solid";
 import { useMaterialTailwindController} from "@/context";
 
 export function DashboardNavbar() {
-  const [controller, dispatch] = useMaterialTailwindController();
-  const { fixedNavbar, openSidenav } = controller;
+  const [controller] = useMaterialTailwindController();
+  const { fixedNavbar }= controller;
   const { pathname } = useLocation();
   const [layout, page] = pathname.split("/").filter((el) => el !== "");
   const { user, loading } = useAuth();
@@ -71,7 +66,7 @@ export function DashboardNavbar() {
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <Avatar src={profilePicture} alt={`${username}'s profile picture`} size="sm" variant="circular" />
+            <Avatar src={profilePicture} alt={`${username}'s profile picture`} size="xs" variant="circular" />
             <Typography variant="small" color="blue-gray" className="font-normal">
               {username}
             </Typography>

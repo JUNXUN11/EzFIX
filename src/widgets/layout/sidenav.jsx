@@ -105,22 +105,29 @@ export function Sidenav({ brandImg, brandName, routes }) {
                     })
                     .map(({ icon, name, path }) => (
                       <li key={name}>
-                        <NavLink to={`/${layout}${path}`} activeClassName="bg-blue-gray-800 text-white">
-                          <Button
-                            variant="text"
-                            color="blue-gray"
-                            className="flex items-center gap-4 px-4 capitalize"
-                            fullWidth
+                        <NavLink
+                        to={`/${layout}${path}`}
+                        className={({ isActive }) =>
+                          `flex items-center gap-4 px-4 capitalize rounded-lg ${
+                            isActive ? "bg-black text-white shadow-md" : "hover:bg-gray-100 text-blue-gray-700"
+                          }`
+                        }
+                      >
+                        <Button
+                          variant="text"
+                          color="blue-gray"
+                          className="flex items-center gap-4 w-full text-inherit"
+                        >
+                          {icon}
+                          <Typography
+                            color="inherit"
+                            className="font-medium capitalize"
                           >
-                            {icon}
-                            <Typography
-                              color="inherit"
-                              className="font-medium capitalize"
-                            >
-                              {name}
-                            </Typography>
-                          </Button>
-                        </NavLink>
+                            {name}
+                          </Typography>
+                        </Button>
+                      </NavLink>
+
                       </li>
                     ))}
                 </ul>
