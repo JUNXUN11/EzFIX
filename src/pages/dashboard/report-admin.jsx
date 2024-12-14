@@ -279,7 +279,7 @@ const AdminReport = () => {
 
   const fetchReportImage = async (reportId, fileId) => {
     try {
-      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/{reportId}/attachments/{fileId}`);
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}/attachments/${fileId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch image');
       }
