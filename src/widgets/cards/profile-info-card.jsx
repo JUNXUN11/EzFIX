@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@material-tailwind/react";
 
-export function ProfileInfoCard({ title, description, details, action }) {
+export function ProfileInfoCard({ title, details, action }) {
   return (
     <Card color="transparent" shadow={false}>
       <CardHeader
@@ -21,14 +21,6 @@ export function ProfileInfoCard({ title, description, details, action }) {
         {action}
       </CardHeader>
       <CardBody className="p-0">
-        {description && (
-          <Typography
-            variant="paragraph"
-            className="font-normal text-blue-gray-500 mb-4"
-          >
-            {description}
-          </Typography>
-        )}
         {details && (
           <ul className="flex flex-col gap-4 p-0">
             {Object.keys(details).map((key, index) => (

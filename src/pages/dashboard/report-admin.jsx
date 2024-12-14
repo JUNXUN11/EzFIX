@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon } from "@heroicons/react/24/solid";
+import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 const Toast = ({ message, type, onClose }) => {
   return (
@@ -26,7 +26,6 @@ const AdminReport = () => {
   const [updateError, setUpdateError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [shouldFetch, setShouldFetch] = useState(true);
 
   const handleSort = (key) => {
     // Convert key to match the actual data properties
@@ -122,25 +121,12 @@ const AdminReport = () => {
 
   useEffect(() => {
     fetchReports();
-    
-    // Fetches every 15 seconds when no report is selected
-    let intervalId = null;
-    if (shouldFetch && !selectedReport) {
-      intervalId = setInterval(() => {
-        fetchReports();
-      }, 15000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [shouldFetch]);
+  }, []);
 
   const fetchReports = async () => {
     try {
       setLoading(true); 
+      setError(null);
       const response = await fetch('https://theezfixapi.onrender.com/api/v1/reports');
       
       if (!response.ok) {
@@ -167,13 +153,11 @@ const AdminReport = () => {
   };
 
   const handleViewReport = (report) => {
-    setShouldFetch(false); 
     setSelectedReport(report);
   };
 
   const handleCloseDetails = () => {
     setSelectedReport(null);
-    setShouldFetch(true); 
   };
 
   const showToast = (message, type = 'success') => {
@@ -584,7 +568,7 @@ const AdminReport = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="animate-spin h-12 w-12 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+        <div className="animate-spin h-12 w-12 border-4 border-black rounded-full border-t-transparent"></div>
       </div>
     );
   }
@@ -643,6 +627,13 @@ const AdminReport = () => {
                 </option>
               ))}
             </select>
+            <button
+              onClick={fetchReports}
+              className="flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors"
+              title="Refresh Reports"
+            >
+              <ArrowPathIcon className="h-5 w-5 text-gray-700" />
+            </button>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -781,6 +772,14 @@ const AdminReport = () => {
                   </option>
                 ))}
               </select>
+              <button
+                onClick={fetchReports}
+                className="mt-4 flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors w-full"
+                title="Refresh Reports"
+              >
+                <ArrowPathIcon className="h-5 w-5 text-gray-700" />
+                <span className="ml-2 text-gray-700">Refresh</span>
+              </button>
             </div>
           </div>
         {filteredData().map((report) => (

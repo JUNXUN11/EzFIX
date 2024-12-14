@@ -4,8 +4,10 @@ import {
   BugAntIcon,
   WrenchIcon,
   HomeIcon,
+  UserIcon,
   EllipsisHorizontalCircleIcon
 } from "@heroicons/react/24/solid";
+
 
 const apiEndpoint = "https://theezfixapi.onrender.com/api/v1/reports";
 
@@ -37,6 +39,12 @@ export function useStatisticsCategoriesData() {
     },
     {
       color: "gray",
+      icon: UserIcon,
+      title: "Civil",
+      value: "0",
+    },
+    {
+      color: "gray",
       icon: EllipsisHorizontalCircleIcon,
       title: "Others",
       value: "0",
@@ -50,12 +58,13 @@ export function useStatisticsCategoriesData() {
         const data = await response.json();
 
         // Filter data by category and count occurrences
-        const electricalCount = data.filter((report) => report.category === "Electrical Damage").length;
+        const electricalCount = data.filter((report) => report.category === "Electrical").length;
         const pestControlCount = data.filter((report) => report.category === "Pest Control").length;
         const pipingCount = data.filter((report) => report.category === "Piping").length;
         const sanitaryCount = data.filter((report) => report.category === "Sanitary").length;
+        const civilCount = data.filter((report) => report.category === "Civil").length;
         const otherCount = data.filter((report) => 
-          !["Electrical Damage", "Pest Control", "Piping", "Sanitary"].includes(report.category)
+          !["Electrical", "Pest Control", "Piping", "Sanitary", "Civil"].includes(report.category)
         ).length;
 
         // Update the state with fetched data
@@ -83,6 +92,12 @@ export function useStatisticsCategoriesData() {
             icon: HomeIcon,
             title: "Sanitary",
             value: sanitaryCount.toString(),
+          },
+          {
+            color: "gray",
+            icon: UserIcon,
+            title: "Civil",
+            value: civilCount.toString(),
           },
           {
             color: "gray",

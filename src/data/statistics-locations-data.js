@@ -13,9 +13,10 @@ export function useLocationDistributionChart() {
     options: {
       ...chartsConfig,
       labels: [], // Location labels
-      colors: ["#FFA726", "#29B6F6", "#66BB6A", "#FF7043", "#AB47BC"], // Custom colors
+      colors: ["#F8B88B", "#AED9F5", "#B9E4C9", "#F7AFAE", "#D3B3E5"],
       legend: { position: "bottom" },
     },
+    
   });
 
   useEffect(() => {

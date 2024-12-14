@@ -3,6 +3,7 @@ import {
   ClipboardDocumentListIcon,
   CheckIcon,
   ExclamationCircleIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/solid";
 
 // API endpoint
@@ -24,6 +25,12 @@ export function useStatisticsCardsData() {
     },
     {
       color: "red",
+      icon: XMarkIcon,
+      title: "Rejected Reports",
+      value: "0",
+    },
+    {
+      color: "yellow",
       icon: ExclamationCircleIcon,
       title: "Pending Reports",
       value: "0",
@@ -37,15 +44,16 @@ export function useStatisticsCardsData() {
         const data = await response.json();
 
         // Calculating values
-        const newReports = data.filter((report) => report.status === "Pending").length;
-        const resolvedReports = data.filter((report) => report.status === "Resolved").length;
-        const pendingReports = data.filter((report) => report.status === "In Progress").length;
+        const newReports = data.filter((report) => report.status === "pending").length;
+        const resolvedReports = data.filter((report) => report.status === "fixed").length;
+        const rejectedReports = data.filter((report) => report.status === "rejected").length;
+        const pendingReports = data.filter((report) => report.status === "in progress").length;
 
         setCardsData([
           {
-            color: "orange",
+            color: "yellow",
             icon: ClipboardDocumentListIcon,
-            title: "New Report",
+            title: "New Reports",
             value: newReports.toString(),
           },
           {
@@ -56,8 +64,14 @@ export function useStatisticsCardsData() {
           },
           {
             color: "red",
+            icon: XMarkIcon,
+            title: "Rejected Reports",
+            value: rejectedReports.toString(),
+          },
+          {
+            color: "orange",
             icon: ExclamationCircleIcon,
-            title: "Pending Reports",
+            title: "In Progress Reports",
             value: pendingReports.toString(),
           },
         ]);
