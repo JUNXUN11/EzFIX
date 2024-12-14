@@ -8,6 +8,7 @@ import {
   EllipsisHorizontalCircleIcon
 } from "@heroicons/react/24/solid";
 
+
 const apiEndpoint = "https://theezfixapi.onrender.com/api/v1/reports";
 
 export function useStatisticsCategoriesData() {
