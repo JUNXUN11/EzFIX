@@ -295,6 +295,7 @@ const AdminReport = () => {
     const [currentStatus, setCurrentStatus] = useState(report.status);
     const [images, setImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
+    const [fullScreenImage, setFullScreenImage] = useState(null);
     const [comment, setComment] = useState(report.comment || '');
     const [newComment, setNewComment] = useState('');
     const [isCommenting, setIsCommenting] = useState(false);
@@ -335,6 +336,30 @@ const AdminReport = () => {
         document.removeEventListener('mousedown', handleClickOutside);
       };
     }, [report.status]);
+
+    const FullScreenImageModal = ({ imageUrl, onClose }) => {
+      return (
+        <div 
+          className="fixed inset-0 z-[100] bg-black bg-opacity-90 flex items-center justify-center p-4 cursor-pointer"
+          onClick={onClose}
+        >
+          <div className="relative max-w-[90%] max-h-[90%]">
+            <button 
+              onClick={onClose}
+              className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 rounded-full p-2 z-50"
+            >
+              <XMarkIcon className="h-8 w-8 text-white" />
+            </button>
+            <img 
+              src={imageUrl} 
+              alt="Full screen attachment" 
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      );
+    };
 
     if (!report) return null;
 
@@ -453,7 +478,7 @@ const AdminReport = () => {
                 ) : images.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4">
                     {images.map((imageUrl, index) => (
-                      <div key={index} className="relative aspect-square">
+                      <div key={index} className="relative aspect-square" onClick={() => setFullScreenImage(imageUrl)}>
                         <img
                           src={imageUrl}
                           alt={`Damage report ${index + 1}`}
@@ -468,6 +493,13 @@ const AdminReport = () => {
                   </p>
                 )}
               </div>
+              
+              {fullScreenImage && (
+                <FullScreenImageModal 
+                  imageUrl={fullScreenImage} 
+                  onClose={() => setFullScreenImage(null)} 
+                />
+              )}
               
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-3">Update Status</p>
