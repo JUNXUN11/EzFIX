@@ -51,7 +51,7 @@ export function useStatisticsCardsData() {
 
         setCardsData([
           {
-            color: "orange",
+            color: "yellow",
             icon: ClipboardDocumentListIcon,
             title: "New Report",
             value: newReports.toString(),
@@ -69,9 +69,9 @@ export function useStatisticsCardsData() {
             value: rejectedReports.toString(),
           },
           {
-            color: "yellow",
+            color: "orange",
             icon: ExclamationCircleIcon,
-            title: "Pending Reports",
+            title: "In Progress Reports",
             value: pendingReports.toString(),
           },
         ]);
