@@ -141,7 +141,7 @@ export function Profile() {
       <div className="relative mt-8 h-72 w-full overflow-hidden rounded-xl bg-[url('/img/background.jpg')] bg-cover bg-center"></div>
       <Card className="mx-3 -mt-20 mb-6 lg:mx-4 shadow-lg md:mx-8 xl:mx-12 p-6">
         <CardBody className="p-4 mb-10">
-          <div className="flex flex-col items-start gap-6 ml-10 md:flex-row md:items-center md:gap-8">
+          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:gap-8">
             <div className="relative">
               <Avatar
                 src={profilePicture}
@@ -150,10 +150,10 @@ export function Profile() {
                 variant="circular"
                 className="border-2 border-white shadow-xl"
               />
-              {isEditing && (
+              {(
                 <label
                   htmlFor="profile-picture-input"
-                  className="absolute bottom-0 right-0 bg-blue-500 text-white rounded-full p-2 cursor-pointer shadow-lg"
+                  className="absolute bottom-0 right-0 bg-black text-white rounded-full p-2 cursor-pointer shadow-lg"
                 >
                   <CameraIcon className="h-5 w-5" />
                 </label>
@@ -177,25 +177,29 @@ export function Profile() {
                 >
                   {formData.role}
                 </Typography>
-                {!isEditing && (
-                  <Button
-                    variant="gradient"
-                    color="black"
-                    className="ml-auto flex items-center gap-2"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    <PencilIcon className="h-4 w-3" />
-                    Edit Profile
-                  </Button>
-                )}
               </div>
             </div>
           </div>
 
+          <div className="flex items-center justify-between mt-6">
+            <Typography variant="h6" color="blue-gray">
+              Welcome to your profile page! Here you can view and edit your personal information.
+            </Typography>
+            {!isEditing && (
+              <Button
+                variant="gradient"
+                color="black"
+                className="flex items-center gap-2"
+                onClick={() => setIsEditing(true)}
+              >
+                <PencilIcon className="h-4 w-3" />
+                Edit Profile
+              </Button>
+            )}
+          </div>
+
           <div className="mt-6">
             <ProfileInfoCard
-              title="Profile Information"
-              description="Welcome to your profile page! Here you can view and edit your personal information."
               details={{
                 Username: formData.username,
                 Email: formData.email,

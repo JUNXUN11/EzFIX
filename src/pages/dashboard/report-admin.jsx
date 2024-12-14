@@ -536,7 +536,7 @@ const AdminReport = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="animate-spin h-12 w-12 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+        <div className="animate-spin h-12 w-12 border-4 border-black rounded-full border-t-transparent"></div>
       </div>
     );
   }
