@@ -30,10 +30,15 @@ export function AIChatBot() {
         ]);
 
         const response = await axios.post(
-          "https://theezfixapi.onrender.com/api/chat",
-          { message: userMessage }
-        );   
-
+          "https://cors-anywhere.herokuapp.com/https://theezfixapi.onrender.com/api/chat",
+          { message: userMessage },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );              
+        
         const botMessage = response.data.reply;
         setConversation((prev) => {
           const updatedConversation = [...prev];
