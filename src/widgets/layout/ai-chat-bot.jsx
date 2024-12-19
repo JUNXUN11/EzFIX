@@ -10,9 +10,7 @@ export function AIChatBot() {
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState([]);
 
-  const predefinedQuestions = [
-    "What is the working hours?",
-  ];
+  const predefinedQuestions = ["What is the working hours?"];
 
   const handleSendMessage = async (customMessage = null) => {
     const userMessage = customMessage || message;
@@ -34,7 +32,7 @@ export function AIChatBot() {
         const response = await axios.post(
           "https://theezfixapi.onrender.com/api/chat",
           { message: userMessage }
-        );
+        );   
 
         const botMessage = response.data.reply;
         setConversation((prev) => {
@@ -84,7 +82,7 @@ export function AIChatBot() {
         </div>
 
         {/* Main Content */}
-        <div className="flex flex-col h-full h-[48vh]">
+        <div className="flex flex-col h-[47vh]">
           {/* Conversation Area */}
           <div className="flex-grow overflow-y-auto mb-4 border rounded-lg p-3 bg-gradient-to-br from-gray-50 via-white to-blue-100">
             {conversation.length === 0 ? (
