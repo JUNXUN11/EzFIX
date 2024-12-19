@@ -70,12 +70,20 @@ const CreateReport = () => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
+    const updatedAttachements = [...report.attachments, ...files];
     setReport((prev) => ({
       ...prev,
-      attachments: files,
+      attachments: updatedAttachements,
     }));
   };
 
+  const handleRemoveAttachment = (indexToRemove) => {
+    setReport((prev) => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, index) => index !== indexToRemove),
+    }));
+  };
+  
   const showAlertMessage = (message, type = 'success') => {
     setShowAlert({
       show: true,
@@ -320,7 +328,7 @@ const CreateReport = () => {
                 id="attachments"
                 name="attachments"
                 multiple
-                accept=".jpg,.jpeg,.png"
+                accept=".jpg,.jpeg,.png,.mp4,.avi,.mov"
                 onChange={handleFileChange}
                 className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
               />
@@ -331,13 +339,22 @@ const CreateReport = () => {
                   </Typography>
                   <ul className="list-disc list-inside text-sm text-gray-600">
                     {report.attachments.map((file, index) => (
-                      <li key={index}>{file.name}</li>
-                    ))}
-                  </ul>
+                      <li key={index} className="flex items-center justify-between">
+                        <span>{file.name}</span>
+                        <Button
+                          variant="text"
+                          color="red"
+                          size="sm"
+                          onClick={() => handleRemoveAttachment(index)}
+                        >
+                          Remove
+                        </Button>
+                    </li>
+                   ))}
+                  </ul>                             
                 </div>
               )}
             </div>
-
             <Button
               type="submit"
               variant="gradient"

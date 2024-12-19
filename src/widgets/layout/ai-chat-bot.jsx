@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import { Button, IconButton, Typography } from "@material-tailwind/react";
 import { useMaterialTailwindController, setOpenConfigurator } from "@/context";
+import axios from "axios";
 
 export function AIChatBot() {
   const [controller, dispatch] = useMaterialTailwindController();
@@ -9,15 +10,50 @@ export function AIChatBot() {
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState([]);
 
-  const handleSendMessage = () => {
-    if (message.trim()) {
+  const predefinedQuestions = [
+    "What is the working hours?",
+  ];
+
+  const handleSendMessage = async (customMessage = null) => {
+    const userMessage = customMessage || message;
+
+    if (userMessage.trim()) {
       const newConversation = [
         ...conversation,
-        { type: "user", text: message },
+        { type: "user", text: userMessage },
       ];
       setConversation(newConversation);
       setMessage("");
+
+      try {
+        setConversation((prev) => [
+          ...prev,
+          { type: "bot", text: "Typing..." },
+        ]);
+
+        const response = await axios.post(
+          "https://theezfixapi.onrender.com/api/chat",
+          { message: userMessage }
+        );
+
+        const botMessage = response.data.reply;
+        setConversation((prev) => {
+          const updatedConversation = [...prev];
+          updatedConversation.pop(); // Remove "Typing..."
+          return [...updatedConversation, { type: "bot", text: botMessage }];
+        });
+      } catch (error) {
+        console.error("Error sending message:", error);
+        setConversation((prev) => [
+          ...prev,
+          { type: "bot", text: "Sorry, I couldn't process your request." },
+        ]);
+      }
     }
+  };
+
+  const handlePredefinedQuestion = (question) => {
+    handleSendMessage(question);
   };
 
   return (
@@ -48,11 +84,9 @@ export function AIChatBot() {
         </div>
 
         {/* Main Content */}
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full h-[48vh]">
           {/* Conversation Area */}
-          <div
-            className="flex-grow overflow-y-auto mb-4 border rounded-lg p-3 bg-gradient-to-br from-gray-50 via-white to-blue-100"
-          >
+          <div className="flex-grow overflow-y-auto mb-4 border rounded-lg p-3 bg-gradient-to-br from-gray-50 via-white to-blue-100">
             {conversation.length === 0 ? (
               <div className="text-center text-gray-500">
                 No messages yet. Start a conversation!
@@ -73,22 +107,33 @@ export function AIChatBot() {
             )}
           </div>
 
+          {/* Predefined Questions */}
+          <div className="flex flex-col space-y-2 mb-4">
+            {predefinedQuestions.map((question, index) => (
+              <button
+                key={index}
+                onClick={() => handlePredefinedQuestion(question)}
+                className="text-left bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold p-2 rounded-lg transition duration-150"
+              >
+                {question}
+              </button>
+            ))}
+          </div>
+
           {/* Input Area */}
-          <div
-            className="flex items-center pt-2 mb-10 "
-          >
+          <div className="flex items-center pt-2">
             <input
               type="text"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder="Type your message..."
-              className="flex-grow mb-4 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="flex-grow p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500"
               onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
             />
             <Button
               color="black"
-              onClick={handleSendMessage}
-              className="rounded-lg mb-4 ml-2 px-4"
+              onClick={() => handleSendMessage()}
+              className="rounded-lg ml-2 px-4"
             >
               Send
             </Button>
