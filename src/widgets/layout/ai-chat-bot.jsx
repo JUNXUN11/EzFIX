@@ -10,7 +10,7 @@ export function AIChatBot() {
   const [message, setMessage] = useState("");
   const [conversation, setConversation] = useState([]);
 
-  const predefinedQuestions = ["What is the working hours?"];
+  const predefinedQuestions = ["What are the working hours?"];
 
   const handleSendMessage = async (customMessage = null) => {
     const userMessage = customMessage || message;
@@ -30,15 +30,15 @@ export function AIChatBot() {
         ]);
 
         const response = await axios.post(
-          "https://cors-anywhere.herokuapp.com/https://theezfixapi.onrender.com/api/chat",
+          "https://cors-anywhere-00c5.onrender.com/https://theezfixapi.onrender.com/api/chat",
           { message: userMessage },
           {
             headers: {
               "Content-Type": "application/json",
             },
           }
-        );              
-        
+        );
+
         const botMessage = response.data.reply;
         setConversation((prev) => {
           const updatedConversation = [...prev];
