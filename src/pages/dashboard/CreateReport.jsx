@@ -25,7 +25,8 @@ const CreateReport = () => {
     roomNo: '',
     category: '',
     description: '',
-    attachments: [], 
+    attachments: [],
+    priority: '',
   });
 
   const [showAlert, setShowAlert] = useState({
@@ -112,6 +113,7 @@ const CreateReport = () => {
     formData.append('technicianNo', ''); 
     formData.append('isDuplicate', false);
     formData.append('duplicateOf', ''); 
+    formData.append('priority', false);
 
     // Append files
     if (report.attachments && report.attachments.length > 0) {
@@ -136,6 +138,7 @@ const CreateReport = () => {
         category: '',
         description: '',
         attachments: [],
+        priority: '',
       });
 
       // Reset the file input 
