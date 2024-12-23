@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Card,
   CardHeader,
   CardBody,
   Spinner,
 } from "@material-tailwind/react";
-import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
+import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, MessageSquareIcon, VideoIcon, ImageIcon, Maximize} from "lucide-react";
 
 const capitalizeFirstLetter = (string) => {
   if (!string) return '';
@@ -19,11 +19,12 @@ const Report = () => {
   const [error, setError] = useState(null);
   const [selectedReport, setSelectedReport] = useState(null);
   const [images, setImages] = useState(null);
-  const [loadingImages, setLoadingImages] = useState(0);
+  const [loadingImages] = useState(0);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const [activeFilter, setActiveFilter] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
+  const [mediaType, setMediaType] = useState({})
 
   const statusOptions = ["Pending", "In progress", "Rejected", "Fixed"];
 
@@ -32,30 +33,33 @@ const Report = () => {
   }, []);
 
   useEffect(() => {
-    const loadImages = async () => {
+    const loadMedia = async () => {
       if (reports.length > 0) {
-        const imagePromises = reports.map(report => 
+        const mediaPromises = reports.map(report => 
           Promise.all(
-            report.attachments.map(fileId => fetchReportImage(report.id, fileId))
+            report.attachments.map(async (fileId) => {
+              const media = await fetchReportMedia(report.id, fileId);
+              return media;
+            })
           )
         );
         
-        const allLoadedImages = await Promise.all(imagePromises);
-        const validImages = allLoadedImages.map(reportImages => 
-          reportImages.filter(img => img !== null)
+        const allLoadedMedia = await Promise.all(mediaPromises);
+        const validMedia = allLoadedMedia.map(reportMedia => 
+          reportMedia.filter(media => media !== null)
         );
         
-        // Create a mapping of report IDs to their images
-        const reportImagesMap = reports.reduce((acc, report, index) => {
-          acc[report.id] = validImages[index];
+        // Create a mapping of report IDs to their media
+        const reportMediaMap = reports.reduce((acc, report, index) => {
+          acc[report.id] = validMedia[index];
           return acc;
         }, {});
   
-        setImages(reportImagesMap);
+        setImages(reportMediaMap);
       }
     };
   
-    loadImages();
+    loadMedia();
   
     return () => {
       // Clean up object URLs if needed
@@ -64,6 +68,167 @@ const Report = () => {
       }
     };
   }, [reports]);
+
+  // Fetch and determine media type
+  const fetchReportMedia = async (reportId, fileId) => {
+    try {
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}/attachments/${fileId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch media');
+      }
+      const blob = await response.blob();
+      
+      // Determine media type
+      const type = blob.type.split('/')[0];
+      setMediaType(prev => ({
+        ...prev,
+        [`${reportId}-${fileId}`]: type
+      }));
+      
+      return URL.createObjectURL(blob);
+    } catch (error) {
+      console.error('Error fetching media:', error);
+      return null;
+    }
+  };
+
+  // Function to render media thumbnail
+  const MediaThumbnail = ({ url, type, onClick }) => {
+    if (type === 'video') {
+      return (
+        <div className="relative aspect-square cursor-pointer" onClick={onClick}>
+          <video
+            className="rounded-lg object-cover w-full h-full"
+            preload="metadata"
+          >
+            <source src={url} />
+          </video>
+          <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 rounded-lg">
+            <VideoIcon className="w-8 h-8 text-white" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative aspect-square cursor-pointer" onClick={onClick}>
+        <img
+          src={url}
+          alt="Attachment"
+          className="rounded-lg object-cover w-full h-full"
+        />
+        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 hover:bg-opacity-30 rounded-lg transition-opacity">
+          <ImageIcon className="w-8 h-8 text-white opacity-0 hover:opacity-100" />
+        </div>
+      </div>
+    );
+  };
+
+  // Function to render media viewer
+  const MediaViewer = ({ url, type, onClose }) => {
+    const videoRef = useRef(null);
+  
+    const toggleFullScreen = async () => {
+      if (!document.fullscreenElement) {
+        try {
+          if (videoRef.current.requestFullscreen) {
+            await videoRef.current.requestFullscreen();
+          } else if (videoRef.current.webkitRequestFullscreen) {
+            await videoRef.current.webkitRequestFullscreen();
+          } else if (videoRef.current.msRequestFullscreen) {
+            await videoRef.current.msRequestFullscreen();
+          }
+        } catch (err) {
+          console.error('Error attempting to enable fullscreen:', err);
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        }
+      }
+    };
+  
+    if (type === 'video') {
+      return (
+        <div className="relative max-w-4xl max-h-[80vh] mx-auto">
+          <video
+            ref={videoRef}
+            controls
+            className="w-full h-full"
+            autoPlay
+          >
+            <source src={url} />
+            Your browser does not support the video tag.
+          </video>
+          <button
+            onClick={toggleFullScreen}
+            className="absolute top-4 left-4 p-2 bg-black/50 hover:bg-black/70 rounded-full transition-colors"
+          >
+            <Maximize className="w-6 h-6 text-white" />
+          </button>
+        </div>
+      );
+    }
+    
+    return (
+      <img
+        src={url}
+        alt="Attachment"
+        className="max-w-full max-h-[80vh] object-contain"
+      />
+    );
+  };
+  
+  const renderAttachments = () => {
+    if (!selectedReport || !images || !images[selectedReport.id]) {
+      return (
+        <p className="text-sm text-gray-500 italic text-center p-4">
+          No attachments available
+        </p>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-2 gap-4">
+        {images[selectedReport.id].map((url, index) => (
+          <MediaThumbnail
+            key={index}
+            url={url}
+            type={mediaType[`${selectedReport.id}-${selectedReport.attachments[index]}`]}
+            onClick={() => {
+              setSelectedImage(url);
+              setImageIndex(index);
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Modify the media viewer modal
+  const renderMediaViewerModal = () => {
+    if (!selectedImage || !selectedReport) return null;
+
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4">
+        <div className="relative max-w-full max-h-full flex items-center">
+          {/* Navigation and close buttons (keep existing code) */}
+          
+          <MediaViewer
+            url={selectedImage}
+            type={mediaType[`${selectedReport.id}-${selectedReport.attachments[imageIndex]}`]}
+            onClose={() => {
+              setSelectedImage(null);
+              setImageIndex(0);
+            }}
+          />
+          
+          {/* Counter (keep existing code) */}
+        </div>
+      </div>
+    );
+  };
+
 
   const fetchReports = async () => {
     try {
@@ -350,24 +515,7 @@ const Report = () => {
                     <Spinner className="h-6 w-6" />
                   </div>
               ) : images && images[selectedReport.id] && images[selectedReport.id].length > 0 ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {images[selectedReport.id].map((imageUrl, index) => (
-                    <div 
-                      key={index} 
-                      className="relative aspect-square cursor-pointer"
-                      onClick={() => {
-                        setSelectedImage(imageUrl);
-                        setImageIndex(index);
-                      }}
-                    >
-                      <img
-                        src={imageUrl}
-                        alt={`Damage report ${index + 1}`}
-                        className="rounded-lg object-cover w-full h-full"
-                      />
-                    </div>
-                  ))}
-                </div>
+                renderAttachments()
               ) : (
                 <p className="text-sm text-gray-500 italic text-center p-4">
                   No attachments available
@@ -411,14 +559,12 @@ const Report = () => {
               <XIcon className="text-black w-6 h-6 stroke-2" />
             </button>
 
-            {/* Main Image */}
-            <img
-              src={selectedImage}
-              alt={`Attachment ${imageIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
-              onError={(e) => {
-                e.target.src = '/path/to/fallback/image.png';
-                console.error(`Failed to load full image: ${selectedImage}`);
+            <MediaViewer
+              url={selectedImage}
+              type={mediaType[`${selectedReport.id}-${selectedReport.attachments[imageIndex]}`]}
+              onClose={() => {
+                setSelectedImage(null);
+                setImageIndex(0);
               }}
             />
 
