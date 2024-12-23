@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon } from "@heroicons/react/24/solid";
+import React, { useState, useEffect, useRef } from 'react';
+import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
 const Toast = ({ message, type, onClose }) => {
   return (
@@ -26,7 +26,6 @@ const AdminReport = () => {
   const [updateError, setUpdateError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [shouldFetch, setShouldFetch] = useState(true);
 
   const handleSort = (key) => {
     // Convert key to match the actual data properties
@@ -122,25 +121,12 @@ const AdminReport = () => {
 
   useEffect(() => {
     fetchReports();
-    
-    // Fetches every 15 seconds when no report is selected
-    let intervalId = null;
-    if (shouldFetch && !selectedReport) {
-      intervalId = setInterval(() => {
-        fetchReports();
-      }, 15000);
-    }
-
-    return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [shouldFetch]);
+  }, []);
 
   const fetchReports = async () => {
     try {
       setLoading(true); 
+      setError(null);
       const response = await fetch('https://theezfixapi.onrender.com/api/v1/reports');
       
       if (!response.ok) {
@@ -167,13 +153,11 @@ const AdminReport = () => {
   };
 
   const handleViewReport = (report) => {
-    setShouldFetch(false); 
     setSelectedReport(report);
   };
 
   const handleCloseDetails = () => {
     setSelectedReport(null);
-    setShouldFetch(true); 
   };
 
   const showToast = (message, type = 'success') => {
@@ -279,7 +263,7 @@ const AdminReport = () => {
 
   const fetchReportImage = async (reportId, fileId) => {
     try {
-      const response = await fetch(`http://localhost:8080/api/v1/reports/${reportId}/attachments/${fileId}`);
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}/attachments/${fileId}`);
       if (!response.ok) {
         throw new Error('Failed to fetch image');
       }
@@ -295,9 +279,25 @@ const AdminReport = () => {
     const [currentStatus, setCurrentStatus] = useState(report.status);
     const [images, setImages] = useState([]);
     const [loadingImages, setLoadingImages] = useState(true);
+    const [fullScreenImage, setFullScreenImage] = useState(null);
+    const [comment, setComment] = useState(report.comment || '');
+    const [newComment, setNewComment] = useState('');
+    const [isCommenting, setIsCommenting] = useState(false);
+    const [commentError, setCommentError] = useState(null);
+    const cardRef = useRef(null);
 
     useEffect(() => {
       setCurrentStatus(report.status);
+      setComment(report.comment || '');
+
+      const handleClickOutside = (event) => {
+        if (cardRef.current && !cardRef.current.contains(event.target)) {
+          onClose();
+        }
+      };
+
+      document.addEventListener('mousedown', handleClickOutside);
+      
       const loadImages = async () => {
         setLoadingImages(true);
         if (report.attachments && report.attachments.length > 0) {
@@ -317,8 +317,33 @@ const AdminReport = () => {
       // Cleanup function to revoke object URLs
       return () => {
         images.forEach(url => URL.revokeObjectURL(url));
+        document.removeEventListener('mousedown', handleClickOutside);
       };
     }, [report.status]);
+
+    const FullScreenImageModal = ({ imageUrl, onClose }) => {
+      return (
+        <div 
+          className="fixed inset-0 z-[100] bg-black bg-opacity-90 flex items-center justify-center p-4 cursor-pointer"
+          onClick={onClose}
+        >
+          <div className="relative max-w-[90%] max-h-[90%]">
+            <button 
+              onClick={onClose}
+              className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 rounded-full p-2 z-50"
+            >
+              <XMarkIcon className="h-8 w-8 text-white" />
+            </button>
+            <img 
+              src={imageUrl} 
+              alt="Full screen attachment" 
+              className="max-w-full max-h-full object-contain"
+              onClick={(e) => e.stopPropagation()}
+            />
+          </div>
+        </div>
+      );
+    };
 
     if (!report) return null;
 
@@ -335,9 +360,49 @@ const AdminReport = () => {
       setCurrentStatus(newStatus);
     };
 
+    const handleAddComment = async () => {
+      if (!newComment.trim()) {
+        setCommentError('Comment cannot be empty');
+        return;
+      }
+  
+      setIsCommenting(true);
+      setCommentError(null);
+      
+      try {
+        const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${report.id}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ comment: newComment})
+        });
+  
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Failed to add comment');
+        }
+
+        await fetchReports();
+        
+        setNewComment('');
+        showToast('Comment added successfully', 'success');
+  
+      } catch (error) {
+        console.error('Error adding comment:', error);
+        setCommentError(error.message || 'Failed to add comment. Please try again.');
+        showToast('Failed to add comment', 'error');
+      } finally {
+        setIsCommenting(false);
+      }
+    };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div 
+          ref={cardRef}
+          className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+        >
           <div className="p-6 space-y-6">
             <div className="flex justify-between items-start">
               <h2 className="text-2xl font-bold text-gray-900">Report Details</h2>
@@ -397,7 +462,7 @@ const AdminReport = () => {
                 ) : images.length > 0 ? (
                   <div className="grid grid-cols-2 gap-4">
                     {images.map((imageUrl, index) => (
-                      <div key={index} className="relative aspect-square">
+                      <div key={index} className="relative aspect-square" onClick={() => setFullScreenImage(imageUrl)}>
                         <img
                           src={imageUrl}
                           alt={`Damage report ${index + 1}`}
@@ -412,6 +477,13 @@ const AdminReport = () => {
                   </p>
                 )}
               </div>
+              
+              {fullScreenImage && (
+                <FullScreenImageModal 
+                  imageUrl={fullScreenImage} 
+                  onClose={() => setFullScreenImage(null)} 
+                />
+              )}
               
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-500 mb-3">Update Status</p>
@@ -442,6 +514,50 @@ const AdminReport = () => {
                   <p className="text-red-500 text-sm mt-2">{updateError}</p>
                 )}
               </div>
+
+              <div className="p-6 border-t">
+                <h3 className="text-lg font-semibold mb-4">Comments</h3>
+                
+                {/* Existing Comment Display */}
+                {comment && (
+                  <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                    <p className="text-gray-700">{comment}</p>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Added on {new Date(report.updatedAt).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+                
+                {/* New Comment Input */}
+                <div className="flex items-start space-x-3">
+                  <textarea
+                    value={newComment}
+                    onChange={(e) => {
+                      setNewComment(e.target.value);
+                      setCommentError(null);
+                    }}
+                    placeholder="Add a comment..."
+                    className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y min-h-[100px]"
+                    disabled={isCommenting}
+                  />
+                  <button
+                    onClick={handleAddComment}
+                    disabled={isCommenting || !newComment.trim()}
+                    className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    {isCommenting ? (
+                      <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                    ) : (
+                      <PaperAirplaneIcon className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
+                
+                {/* Error Message */}
+                {commentError && (
+                  <p className="text-red-500 text-sm mt-2">{commentError}</p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -452,7 +568,7 @@ const AdminReport = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="animate-spin h-12 w-12 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+        <div className="animate-spin h-12 w-12 border-4 border-black rounded-full border-t-transparent"></div>
       </div>
     );
   }
@@ -511,6 +627,13 @@ const AdminReport = () => {
                 </option>
               ))}
             </select>
+            <button
+              onClick={fetchReports}
+              className="flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors"
+              title="Refresh Reports"
+            >
+              <ArrowPathIcon className="h-5 w-5 text-gray-700" />
+            </button>
           </div>
         </div>
         <div className="overflow-x-auto">
@@ -649,6 +772,14 @@ const AdminReport = () => {
                   </option>
                 ))}
               </select>
+              <button
+                onClick={fetchReports}
+                className="mt-4 flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors w-full"
+                title="Refresh Reports"
+              >
+                <ArrowPathIcon className="h-5 w-5 text-gray-700" />
+                <span className="ml-2 text-gray-700">Refresh</span>
+              </button>
             </div>
           </div>
         {filteredData().map((report) => (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import PropTypes from "prop-types";
 import { Link, NavLink } from "react-router-dom";
-import { XMarkIcon } from "@heroicons/react/24/outline";
+import { XMarkIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
 import {
   Button,
   IconButton,
@@ -11,15 +11,13 @@ import {
   DialogBody,
   DialogFooter,
 } from "@material-tailwind/react";
-import { useMaterialTailwindController, setOpenSidenav } from "@/context";
 import { useAuth } from "@/context/AuthContext";
 
 export function Sidenav({ brandImg, brandName, routes }) {
-  const [controller, dispatch] = useMaterialTailwindController();
-  const { sidenavColor, sidenavType, openSidenav } = controller;
+  const [isSidenavOpen, setIsSidenavOpen] = useState(false); // State for sidenav toggle
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
-  const { user, loading, logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const sidenavTypes = {
     dark: "bg-gradient-to-br from-gray-800 to-gray-900",
@@ -36,33 +34,45 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
   return (
     <>
+      {/* Top Navbar with Toggle for Mobile */}
+      <nav className="fixed inset-y-0 left-0 w-16 bg-transparent shadow-sm z-50 flex items-center justify-center lg:hidden">
+        <IconButton
+          onClick={() => setIsSidenavOpen(!isSidenavOpen)}
+          className="text-blue-gray-800 bg-transparent hover:bg-gray-200 active:bg-gray-300"
+        >
+          {isSidenavOpen ? (
+            <XMarkIcon className="h-6 w-6" />
+          ) : (
+            <ArrowRightIcon className="h-5 w-5" />
+          )}
+        </IconButton>
+      </nav>
+
+      {/* Sidenav */}
       <aside
-        className={`${sidenavTypes[sidenavType]} ${
-          openSidenav ? "translate-x-0" : "-translate-x-80"
-        } fixed inset-0 z-50 my-4 ml-4 h-[calc(100vh-32px)] w-72 rounded-xl transition-transform duration-300 xl:translate-x-0 border border-blue-gray-100`}
+        className={`${sidenavTypes["white"]} ${
+          isSidenavOpen ? "translate-x-0" : "-translate-x-full"
+        } fixed inset-y-0 left-0 z-50 w-72 lg:translate-x-0 transition-transform duration-300 border-r border-blue-gray-100`}
       >
         <div className="relative flex flex-col h-full">
           <div>
-            <Link className="py-6 px-8 text-center">
+            <Link to="/" className="py-6 px-8 text-center">
               <div className="flex items-center gap-4 justify-center">
-                <img src={brandImg} alt="Brand Logo"  className="h-8"/> 
-                <Typography
-                  variant="h6"
-                  color={sidenavType === "dark" ? "white" : "blue-gray"}
-                >
+                <img src={brandImg} alt="Brand Logo" className="h-8" />
+                <Typography variant="h6" color="blue-gray">
                   {brandName}
                 </Typography>
               </div>
             </Link>
             <IconButton
               variant="text"
-              color="white"
+              color="blue-gray"
               size="sm"
               ripple={false}
-              className="absolute right-0 top-0 grid rounded-br-none rounded-tl-none xl:hidden"
-              onClick={() => setOpenSidenav(dispatch, false)}
+              className="absolute right-0 top-0 grid lg:hidden"
+              onClick={() => setIsSidenavOpen(false)} // Close button for mobile
             >
-              <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-white" />
+              <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-blue-gray-800" />
             </IconButton>
           </div>
 
@@ -71,52 +81,55 @@ export function Sidenav({ brandImg, brandName, routes }) {
             {routes
               .filter((route) => route.layout !== "auth") // Filter out "auth" routes
               .map(({ layout, title, pages }, key) => (
-                <ul key={key} className="mb-4 flex flex-col gap-1">
+                <ul key={key} className="mb-4 flex flex-col gap-4">
                   {title && (
                     <li className="mx-3.5 mt-4 mb-2">
                       <Typography
                         variant="small"
-                        color={sidenavType === "dark" ? "white" : "blue-gray"}
+                        color="blue-gray"
                         className="font-black uppercase opacity-75"
                       >
                         {title}
                       </Typography>
                     </li>
                   )}
-                {pages
-                .filter(({ name }) => {
-                  if (name === "Admin Report" && user?.role !== "admin") return false;
-                  if (name === "Admin Dashboard" && user?.role !== "admin") return false;
-                  if (name === "Dashboard" && user?.role !== "user") return false;
-                  if (name === "Create Report" && user?.role !== "user") return false;
-                  if (name === "My Report" && user?.role !== "user") return false;
-                  return true;
-                })
-                .map(({ icon, name, path }) => (
-                  <li key={name}>
-                    <NavLink to={`/${layout}${path}`}>
-                      {({ isActive }) => (
+                  {pages
+                    .filter(({ name }) => {
+                      if (name === "Admin Report" && user?.role !== "admin") return false;
+                      if (name === "Admin Dashboard" && user?.role !== "admin") return false;
+                      if (name === "Announcements" && user?.role !== "admin") return false;
+                      if (name === "Dashboard" && user?.role !== "user") return false;
+                      if (name === "Create Report" && user?.role !== "user") return false;
+                      if (name === "My Report" && user?.role !== "user") return false;
+                      return true;
+                    })
+                    .map(({ icon, name, path }) => (
+                      <li key={name}>
+                        <NavLink
+                        to={`/${layout}${path}`}
+                        className={({ isActive }) =>
+                          `flex items-center gap-4 px-4 capitalize rounded-lg ${
+                            isActive ? "bg-black text-white shadow-md" : "hover:text-blue-gray-700"
+                          }`
+                        }
+                      >
                         <Button
-                          variant={isActive ? "gradient" : "text"}
-                          color={
-                            isActive
-                              ? sidenavColor
-                              : sidenavType === "dark"
-                              ? "white"
-                              : "blue-gray"
-                          }
-                          className="flex items-center gap-4 px-4 capitalize"
-                          fullWidth
+                          variant="text"
+                          color="blue-gray"
+                          className="flex items-center gap-4 w-full text-inherit"
                         >
                           {icon}
-                          <Typography color="inherit" className="font-medium capitalize">
+                          <Typography
+                            color="inherit"
+                            className="font-medium capitalize"
+                          >
                             {name}
                           </Typography>
                         </Button>
-                      )}
-                    </NavLink>
-                  </li>
-                ))}
+                      </NavLink>
+
+                      </li>
+                    ))}
                 </ul>
               ))}
           </div>
@@ -134,13 +147,23 @@ export function Sidenav({ brandImg, brandName, routes }) {
         </div>
       </aside>
 
-      <Dialog open={showLogoutDialog} handler={() => setShowLogoutDialog(false)} animate={{ duration: 0 }}>
+      {/* Logout Dialog */}
+      <Dialog
+        open={showLogoutDialog}
+        handler={() => setShowLogoutDialog(false)}
+        animate={{ duration: 0 }}
+      >
         <DialogHeader>Confirm Logout</DialogHeader>
         <DialogBody divider>
           Are you sure you want to log out?
         </DialogBody>
         <DialogFooter>
-          <Button variant="text" color="blue-gray" onClick={() => setShowLogoutDialog(false)} className="mr-2">
+          <Button
+            variant="text"
+            color="blue-gray"
+            onClick={() => setShowLogoutDialog(false)}
+            className="mr-2"
+          >
             Cancel
           </Button>
           <Button variant="gradient" color="red" onClick={handleLogout}>
