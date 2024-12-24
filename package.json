@@ -3,6 +3,7 @@
   "private": true,
   "version": "2.1.0",
   "type": "module",
+  "proxy": "https://theezfixapi.onrender.com",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
