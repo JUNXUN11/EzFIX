@@ -5,7 +5,7 @@ import {
   CardBody,
   Spinner,
 } from "@material-tailwind/react";
-import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, MessageSquareIcon, VideoIcon, ImageIcon, Maximize} from "lucide-react";
+import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, MessageSquareIcon, VideoIcon, ImageIcon, Maximize, BellIcon} from "lucide-react";
 
 const capitalizeFirstLetter = (string) => {
   if (!string) return '';
@@ -24,13 +24,47 @@ const Report = () => {
   const [activeFilter, setActiveFilter] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
-  const [mediaType, setMediaType] = useState({})
+  const [mediaType, setMediaType] = useState({});
+  const [lastViewedComments, setLastViewedComments] = useState({});
+  const [lastViewedStatus, setLastViewedStatus] = useState({});
 
-  const statusOptions = ["Pending", "In progress", "Rejected", "Fixed"];
+  const statusOptions = ["Pending", "Ongoing", "Rejected", "Fixed"];
 
   useEffect(() => {
     fetchReports();
   }, []);
+
+  useEffect(() => {
+    // Load last viewed states from localStorage when component mounts
+    const storedComments = localStorage.getItem('lastViewedComments');
+    const storedStatus = localStorage.getItem('lastViewedStatus');
+    if (storedComments) setLastViewedComments(JSON.parse(storedComments));
+    if (storedStatus) setLastViewedStatus(JSON.parse(storedStatus));
+  }, []);
+
+  // Update last viewed states when viewing a report
+  useEffect(() => {
+    if (selectedReport) {
+      setLastViewedComments(prev => ({
+        ...prev,
+        [selectedReport.id]: selectedReport.comment
+      }));
+      setLastViewedStatus(prev => ({
+        ...prev,
+        [selectedReport.id]: selectedReport.status
+      }));
+
+      // Save to localStorage
+      localStorage.setItem('lastViewedComments', JSON.stringify({
+        ...lastViewedComments,
+        [selectedReport.id]: selectedReport.comment
+      }));
+      localStorage.setItem('lastViewedStatus', JSON.stringify({
+        ...lastViewedStatus,
+        [selectedReport.id]: selectedReport.status
+      }));
+    }
+  }, [selectedReport]);
 
   useEffect(() => {
     const loadMedia = async () => {
@@ -205,31 +239,6 @@ const Report = () => {
     );
   };
 
-  // Modify the media viewer modal
-  const renderMediaViewerModal = () => {
-    if (!selectedImage || !selectedReport) return null;
-
-    return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-90 p-4">
-        <div className="relative max-w-full max-h-full flex items-center">
-          {/* Navigation and close buttons (keep existing code) */}
-          
-          <MediaViewer
-            url={selectedImage}
-            type={mediaType[`${selectedReport.id}-${selectedReport.attachments[imageIndex]}`]}
-            onClose={() => {
-              setSelectedImage(null);
-              setImageIndex(0);
-            }}
-          />
-          
-          {/* Counter (keep existing code) */}
-        </div>
-      </div>
-    );
-  };
-
-
   const fetchReports = async () => {
     try {
       setLoading(true);
@@ -258,20 +267,6 @@ const Report = () => {
       setError(error.message || "Failed to load reports.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchReportImage = async (reportId, fileId) => {
-    try {
-      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${reportId}/attachments/${fileId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch image');
-      }
-      const blob = await response.blob();
-      return URL.createObjectURL(blob);
-    } catch (error) {
-      console.error('Error fetching image:', error);
-      return null;
     }
   };
 
@@ -356,7 +351,7 @@ const Report = () => {
     const colors = {
       "Pending": "bg-gray-100 text-gray-800",
       "Rejected": "bg-red-100 text-red-800",
-      "In progress": "bg-orange-100 text-orange-800",
+      "On Going": "bg-orange-100 text-orange-800",
       "Fixed": "bg-green-100 text-green-800",
     };
     return colors[status] || "bg-gray-100 text-gray-800";
@@ -365,6 +360,13 @@ const Report = () => {
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString() + " " + date.toLocaleTimeString();
+  };
+
+  // Function to check if there are notifications
+  const hasNotifications = (report) => {
+    const hasNewComment = report.comment && report.comment !== lastViewedComments[report.id];
+    const hasStatusChange = report.status !== lastViewedStatus[report.id];
+    return hasNewComment || hasStatusChange;
   };
 
   if (loading) {
@@ -432,6 +434,15 @@ const Report = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredReports.map((report) => (
               <Card key={report.id} className="hover:shadow-lg transition-shadow duration-300">
+                {/* Notification Badge */}
+                {hasNotifications(report) && (
+                  <div className="absolute top-2 right-2 z-10">
+                    <div className="relative">
+                      <BellIcon className="h-6 w-6 text-blue-500" />
+                      <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse" />
+                    </div>
+                  </div>
+                )}
                 <CardBody className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -455,7 +466,6 @@ const Report = () => {
                       >
                         <EyeIcon className="h-5 w-5" />
                       </button>
-                      {console.log('Report status:', report.status)}
                       {report.status.toLowerCase() === "pending" && (
                         <button
                           onClick={() => setConfirmDelete(report)}
