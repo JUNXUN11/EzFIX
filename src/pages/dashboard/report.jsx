@@ -5,7 +5,7 @@ import {
   CardBody,
   Spinner,
 } from "@material-tailwind/react";
-import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, MessageSquareIcon, VideoIcon, ImageIcon, Maximize, BellIcon} from "lucide-react";
+import { EyeIcon, CalendarIcon, MapPinIcon, TrashIcon, XIcon, ChevronLeftIcon, ChevronRightIcon, MessageSquareIcon, VideoIcon, ImageIcon, Maximize, BellIcon, CheckCircleIcon } from "lucide-react";
 
 const capitalizeFirstLetter = (string) => {
   if (!string) return '';
@@ -369,6 +369,26 @@ const Report = () => {
     return hasNewComment || hasStatusChange;
   };
 
+  const markAllAsRead = () => {
+    const newComments = {};
+    const newStatus = {};
+    
+    reports.forEach(report => {
+      newComments[report.id] = report.comment;
+      newStatus[report.id] = report.status;
+    });
+  
+    setLastViewedComments(newComments);
+    setLastViewedStatus(newStatus);
+    
+    localStorage.setItem('lastViewedComments', JSON.stringify(newComments));
+    localStorage.setItem('lastViewedStatus', JSON.stringify(newStatus));
+  };
+
+  const hasAnyNotifications = () => {
+    return reports.some(report => hasNotifications(report));
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -389,10 +409,22 @@ const Report = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-8 flex flex-col md:flex-row md:justify-between md:items-center space-y-4 md:space-y-0">
+      <div>
         <h1 className="text-3xl font-bold text-gray-800">My Reports</h1>
         <p className="text-gray-600 mt-2">Track and manage your maintenance reports</p>
       </div>
+      
+      {hasAnyNotifications() && (
+        <button
+          onClick={markAllAsRead}
+          className="flex items-center space-x-2 bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded-lg transition-colors duration-200"
+        >
+          <CheckCircleIcon className="h-5 w-5" />
+          <span>Mark All as Read</span>
+        </button>
+      )}
+    </div>
 
       {/* Status Filter Buttons */}
       <div className="flex justify-start space-x-2 mb-6">
@@ -434,15 +466,6 @@ const Report = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredReports.map((report) => (
               <Card key={report.id} className="hover:shadow-lg transition-shadow duration-300">
-                {/* Notification Badge */}
-                {hasNotifications(report) && (
-                  <div className="absolute top-2 right-2 z-10">
-                    <div className="relative">
-                      <BellIcon className="h-6 w-6 text-blue-500" />
-                      <div className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full animate-pulse" />
-                    </div>
-                  </div>
-                )}
                 <CardBody className="p-6">
                   <div className="flex justify-between items-start mb-4">
                     <div>
@@ -459,35 +482,47 @@ const Report = () => {
                       </div>
                     </div>
             
-                    <div className="flex items-center">
-                      <button
-                        onClick={() => setSelectedReport(report)}
-                        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-2"
-                      >
-                        <EyeIcon className="h-5 w-5" />
-                      </button>
-                      {report.status.toLowerCase() === "pending" && (
-                        <button
-                          onClick={() => setConfirmDelete(report)}
-                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full"
-                        >
-                          <TrashIcon className="h-5 w-5" />
-                        </button>
+                    <div className="flex items-center space-x-2">
+                      {/*Notification Bell*/}
+                      {hasNotifications(report) && (
+                        <div className="relative">
+                          <BellIcon className="h-5 w-5 text-blue-500" />
+                          <div className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full animate-pulse" />
+                        </div>
                       )}
                     </div>
                   </div>
-                    
-                  <div className="space-y-2">
-                    <span
-                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(report.category)}`}
-                    >
-                      {report.category}
-                    </span>
-                    <span
-                      className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ml-2 ${getStatusColor(report.status)}`}
-                    >
-                      {capitalizeFirstLetter(report.status)}
-                    </span>
+    
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${getCategoryColor(report.category)}`}
+                      >
+                        {report.category}
+                      </span>
+                      <span
+                        className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ml-2 ${getStatusColor(report.status)}`}
+                      >
+                        {capitalizeFirstLetter(report.status)}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center">
+                      <button
+                          onClick={() => setSelectedReport(report)}
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-full mr-2"
+                        >
+                          <EyeIcon className="h-5 w-5" />
+                        </button>
+                        {report.status.toLowerCase() === "pending" && (
+                          <button
+                            onClick={() => setConfirmDelete(report)}
+                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-full"
+                          >
+                            <TrashIcon className="h-5 w-5" />
+                          </button>
+                        )}
+                    </div>
                   </div>
                 </CardBody>
               </Card>
