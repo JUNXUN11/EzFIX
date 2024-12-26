@@ -71,6 +71,17 @@ const CreateReport = () => {
 
   const handleFileChange = (e) => {
     const files = Array.from(e.target.files);
+
+    // Validate file sizes (16MB = 16 * 1024 * 1024 bytes)
+    const maxSize = 16 * 1024 * 1024; 
+    const invalidFiles = files.filter(file => file.size > maxSize);
+    
+    if (invalidFiles.length > 0) {
+      showAlertMessage('Files must not exceed 16MB in size', 'error');
+      e.target.value = ''; // Reset input
+      return;
+    }
+
     const updatedAttachements = [...report.attachments, ...files];
     setReport((prev) => ({
       ...prev,
@@ -159,6 +170,11 @@ const CreateReport = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    // Check if attachments are present
+    if (!report.attachments || report.attachments.length === 0) {
+      showAlertMessage('Please attach at least one file to your report', 'error');
+      return;
+    }
     setOpenConfirmDialog(true);
   }
 
@@ -259,7 +275,8 @@ const CreateReport = () => {
         >
           <Typography
             variant="h5"
-            color="white" className="text-center"
+            color="white" 
+            className="text-center"
           >
             Create Report
           </Typography>
@@ -324,15 +341,21 @@ const CreateReport = () => {
                 htmlFor="attachments"
                 className="block text-sm font-medium text-gray-700"
               >
-                Attachments (Optional)
+                Attachments (Required)
               </label>
+              <div className="mt-1 text-sm text-gray-500">
+                Upload images (.jpg, .jpeg, .png) or videos (.mp4, .mov) or both.
+                <br />
+                Maximum file size: 16MB per file
+              </div>
               <input
                 type="file"
                 id="attachments"
                 name="attachments"
                 multiple
-                accept=".jpg,.jpeg,.png,.mp4,.avi,.mov"
+                accept=".jpg,.jpeg,.png,.mp4,.mov"
                 onChange={handleFileChange}
+                required
                 className="mt-1 block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
               />
               {report.attachments && report.attachments.length > 0 && (
@@ -343,7 +366,7 @@ const CreateReport = () => {
                   <ul className="list-disc list-inside text-sm text-gray-600">
                     {report.attachments.map((file, index) => (
                       <li key={index} className="flex items-center justify-between">
-                        <span>{file.name}</span>
+                        <span>{file.name} ({(file.size / (1024 * 1024)).toFixed(2)}MB)</span>
                         <Button
                           variant="text"
                           color="red"
