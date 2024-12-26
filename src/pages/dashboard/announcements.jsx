@@ -11,21 +11,24 @@ import {
 } from "@material-tailwind/react";
 
 export function Announcements() {
-  const [announcementText, setAnnouncementText] = useState("");
+  //const [announcementText, setAnnouncementText] = useState("");
+  const [announcementTitle, setAnnouncementTitle] = useState("");
+  const [announcementDescription, setAnnouncementDescription] = useState("");
   const [announcementImage, setAnnouncementImage] = useState(null);
   const [isPosting, setIsPosting] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertType, setAlertType] = useState("");
 
   const handlePostAnnouncement = async () => {
-    if (!announcementText || !announcementImage) {
+    if (!announcementTitle ||!announcementDescription || !announcementImage) {
       setAlertMessage("Please fill in all fields!");
       setAlertType("error");
       return;
     }
 
     const formData = new FormData();
-    formData.append("text", announcementText);
+    formData.append("title", announcementTitle);
+    formData.append("description", announcementDescription);
     formData.append("image", announcementImage);
 
     setIsPosting(true);
@@ -41,7 +44,8 @@ export function Announcements() {
       if (response.ok) {
         setAlertMessage("Announcement posted successfully!");
         setAlertType("success");
-        setAnnouncementText("");
+        setAnnouncementTitle("");
+        setAnnouncementDescription("");
         setAnnouncementImage(null);
       } else {
         throw new Error("Failed to post announcement.");
@@ -78,15 +82,20 @@ export function Announcements() {
               {alertMessage}
             </Alert>
           )}
+          <Input
+            label="Announcement Title"
+            value={announcementTitle}
+            onChange={(e) => setAnnouncementTitle(e.target.value)}
+          />
           <Textarea
-            label="Announcement Text"
-            value={announcementText}
-            onChange={(e) => setAnnouncementText(e.target.value)}
+            label="Announcement Description"
+            value={announcementDescription}
+            onChange={(e) => setAnnouncementDescription(e.target.value)}
           />
           <Input
             label="Upload Image"
             type="file"
-            accept="image/*"
+            accept=".jpg,.jpeg"
             onChange={(e) => setAnnouncementImage(e.target.files[0])}
           />
           <Button

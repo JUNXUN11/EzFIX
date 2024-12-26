@@ -10,6 +10,7 @@ import {
 } from "@material-tailwind/react";
 import { PencilIcon, CheckIcon, CameraIcon } from "@heroicons/react/24/solid";
 import { ProfileInfoCard } from "@/widgets/cards";
+import ClipLoader from "react-spinners/ClipLoader"; 
 
 export function Profile() {
   const { user, setUser } = useAuth();
@@ -20,7 +21,23 @@ export function Profile() {
     email: "",
     role: "",
   });
+   const [showAlert, setShowAlert] = useState({
+      show: false,
+      message: '',
+      type: 'success',
+    });
   const [profilePicture, setProfilePicture] = useState(null);
+  const [imageLoading, setImageLoading] = useState(true);
+  const showAlertMessage = (message, type = 'success') => {
+    setShowAlert({
+      show: true,
+      message,
+      type,
+    });
+    setTimeout(() => {
+      setShowAlert({ show: false, message: '', type: 'success' });
+    }, 3000);
+  };
 
   useEffect(() => {
     const fetchProfilePicture = async () => {
@@ -40,6 +57,8 @@ export function Profile() {
       } catch (error) {
         console.error("Error fetching profile picture:", error.message);
         setProfilePicture("/img/default-avatar.png"); // Set a default image on error
+      }finally {
+        setImageLoading(false); // Loading complete
       }
     };
 
@@ -64,11 +83,11 @@ export function Profile() {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB.");
+      showAlertMessage("File size must be less than 5MB.", "warning");
       return;
     }
     if (!["image/jpeg", "image/png"].includes(file.type)) {
-      alert("Only JPG and PNG formats are supported.");
+      showAlertMessage("Only JPG and PNG formats are supported.", "warning");
       return;
     }
 
@@ -92,14 +111,21 @@ export function Profile() {
       const updatedUser = await response.json();
       setUser(updatedUser);
       setProfilePicture(updatedUser.file); // Update with the new image URL
-      alert("Profile picture updated successfully!");
+      showAlertMessage("Profile picture updated successfully!", "success");
     } catch (error) {
       console.error("Error uploading profile picture:", error.message);
-      alert(`Error: ${error.message}`);
+      showAlertMessage(`Error: ${error.message}`,"error");
     }
   };
-
+  
   const handleSave = async () => {
+    // Trigger native email validation
+    const emailInput = document.querySelector('input[type="email"]');
+    if (!emailInput.checkValidity()) {
+      showAlertMessage("Please enter a valid email address.","warning");
+      return;
+    }
+
     try {
       const response = await fetch(
         `https://theezfixapi.onrender.com/api/v1/users/${user.id}`,
@@ -118,11 +144,11 @@ export function Profile() {
 
       const updatedUser = await response.json();
       setUser(updatedUser);
-      alert("Profile updated successfully!");
+      showAlertMessage("Profile updated successfully!","success");
       setIsEditing(false);
     } catch (error) {
       console.error(error);
-      alert("Error updating profile. Please try again.");
+      showAlertMessage("Error updating profile. Please try again.","error");
     }
   };
 
@@ -139,10 +165,70 @@ export function Profile() {
   return (
     <>
       <div className="relative mt-8 h-72 w-full overflow-hidden rounded-xl bg-[url('/img/background.jpg')] bg-cover bg-center"></div>
+
+      {showAlert.show && (
+        <div
+          role="alert"
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg ${
+            showAlert.type === 'success'
+              ? 'bg-green-100 border border-green-400 text-green-700'
+              : showAlert.type === 'error'
+              ? 'bg-red-100 border border-red-400 text-red-700'
+              : 'bg-yellow-100 border border-yellow-400 text-yellow-700'
+          }`}
+        >
+           <div className="flex items-center">
+            {showAlert.type === 'success' ? (
+              <>
+                <CheckIcon className="w-5 h-5 mr-2 text-green-700" />
+                <p>{showAlert.message}</p>
+              </>
+            ) : showAlert.type === 'error' ? (
+              <>
+                <svg
+                  aria-hidden="true"
+                  className="w-5 h-5 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p>{showAlert.message}</p>
+              </>
+            ) : (
+              <>
+                <svg
+                  aria-hidden="true"
+                  className="w-5 h-5 mr-2"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <p>{showAlert.message}</p>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
       <Card className="mx-3 -mt-20 mb-6 lg:mx-4 shadow-lg md:mx-8 xl:mx-12 p-6">
         <CardBody className="p-4 mb-10">
           <div className="flex flex-col items-start gap-6 md:flex-row md:items-center md:gap-8">
             <div className="relative">
+            {imageLoading ? (
+                <div className="flex justify-center items-center h-24 w-24">
+                  <ClipLoader size={40} color="#3b82f6" />
+                </div>
+              ) : (
               <Avatar
                 src={profilePicture}
                 alt="Profile Picture"
@@ -150,6 +236,7 @@ export function Profile() {
                 variant="circular"
                 className="border-2 border-white shadow-xl"
               />
+              )}
               {(
                 <label
                   htmlFor="profile-picture-input"
