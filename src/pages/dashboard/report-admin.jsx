@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon } from "@heroicons/react/24/solid";
+import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PlayIcon, FlagIcon } from "@heroicons/react/24/solid";
 
 const Toast = ({ message, type, onClose }) => {
   return (
@@ -26,6 +26,57 @@ const AdminReport = () => {
   const [updateError, setUpdateError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  const handleFlagUpdate = async (reportId, isPriority) => {
+    setIsUpdating(true);
+    setUpdateError(null);
+    
+    try {
+      const id = reportId._id || reportId;
+      
+      const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ priority: isPriority })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update flag status');
+      }
+
+      // Update reports state with the new flag status
+      setReports(prevReports => {
+        const newReports = prevReports.map(report => 
+          report._id === reportId ? { ...report, priority: isPriority } : report
+        );
+        
+        // Sort reports to move flagged ones to the top
+        return [...newReports].sort((a, b) => {
+          if (a.priority === b.priority) return 0;
+          return a.priority ? -1 : 1;
+        });
+      });
+
+      if (selectedReport?.id === reportId) {
+        setSelectedReport(currentReport => ({
+          ...currentReport,
+          priority: isPriority
+        }));
+      }
+
+      showToast(isPriority ? 'Report flagged as priority' : 'Priority flag removed', 'success');
+
+    } catch (error) {
+      console.error('Error updating flag status:', error);
+      setUpdateError('Failed to update flag status. Please try again.');
+      showToast('Failed to update flag status', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const handleSort = (key) => {
     // Convert key to match the actual data properties
@@ -50,30 +101,35 @@ const AdminReport = () => {
     if (!reports.length) return [];
     
     let sortableItems = [...reports];
-    if (sortConfig.key) {
-      sortableItems.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-        
-        // Handle dates
-        if (sortConfig.key === 'createdAt') {
-          aValue = new Date(aValue).getTime();
-          bValue = new Date(bValue).getTime();
-        } else {
-          // Convert to lowercase strings for other fields
-          aValue = String(aValue || '').toLowerCase();
-          bValue = String(bValue || '').toLowerCase();
-        }
-        
-        if (aValue < bValue) {
-          return sortConfig.direction === "asc" ? -1 : 1;
-        }
-        if (aValue > bValue) {
-          return sortConfig.direction === "asc" ? 1 : -1;
+
+    sortableItems.sort((a, b) => {
+      if (a.priority === b.priority) {
+        // If flag status is the same, apply the regular sorting
+        if (sortConfig.key) {
+          let aValue = a[sortConfig.key];
+          let bValue = b[sortConfig.key];
+          
+          if (sortConfig.key === 'createdAt') {
+            aValue = new Date(aValue).getTime();
+            bValue = new Date(bValue).getTime();
+          } else {
+            aValue = String(aValue || '').toLowerCase();
+            bValue = String(bValue || '').toLowerCase();
+          }
+          
+          if (aValue < bValue) {
+            return sortConfig.direction === "asc" ? -1 : 1;
+          }
+          if (aValue > bValue) {
+            return sortConfig.direction === "asc" ? 1 : -1;
+          }
         }
         return 0;
-      });
-    }
+      }
+      // Flagged items always come first
+      return a.priority ? -1 : 1;
+    });
+    
     return sortableItems;
   };
 
@@ -277,18 +333,21 @@ const AdminReport = () => {
 
   const ReportDetailsCard = ({ report, onClose }) => {
     const [currentStatus, setCurrentStatus] = useState(report.status);
-    const [images, setImages] = useState([]);
-    const [loadingImages, setLoadingImages] = useState(true);
-    const [fullScreenImage, setFullScreenImage] = useState(null);
+    const [mediaFiles, setMediaFiles] = useState({ images: [], videos: [] });
+    const [isLoadingMedia, setIsLoadingMedia] = useState(true);
+    const [fullScreenMedia, setFullScreenMedia] = useState(null);
     const [comment, setComment] = useState(report.comment || '');
     const [newComment, setNewComment] = useState('');
     const [isCommenting, setIsCommenting] = useState(false);
     const [commentError, setCommentError] = useState(null);
+    const [loadingStates, setLoadingStates] = useState({});
+    const [isPriority, setIsPriority] = useState(report.priority || false);
     const cardRef = useRef(null);
 
     useEffect(() => {
       setCurrentStatus(report.status);
       setComment(report.comment || '');
+      setIsPriority(report.priority || false);
 
       const handleClickOutside = (event) => {
         if (cardRef.current && !cardRef.current.contains(event.target)) {
@@ -298,52 +357,136 @@ const AdminReport = () => {
 
       document.addEventListener('mousedown', handleClickOutside);
       
-      const loadImages = async () => {
-        setLoadingImages(true);
-        if (report.attachments && report.attachments.length > 0) {
-          const imagePromises = report.attachments.map(fileId => 
-            fetchReportImage(report.id, fileId)
-          );
-          
-          const loadedImages = await Promise.all(imagePromises);
-          const validImages = loadedImages.filter(img => img !== null);
-          setImages(validImages);
+      const loadMediaFiles = async () => {
+        setIsLoadingMedia(true);
+        const newMediaFiles = { images: [], videos: [] };
+        
+        if (report.attachments && Array.isArray(report.attachments)) {
+          // Initialize loading states for each attachment
+          const initialLoadingStates = {};
+          report.attachments.forEach(fileId => {
+            initialLoadingStates[fileId] = true;
+          });
+          setLoadingStates(initialLoadingStates);
+  
+          // Process each attachment
+          for (const fileId of report.attachments) {
+            try {
+              const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${report.id}/attachments/${fileId}`);
+              if (!response.ok) {
+                throw new Error(`Failed to fetch media for ID: ${fileId}`);
+              }
+              
+              const blob = await response.blob();
+              const url = URL.createObjectURL(blob);
+              const type = blob.type.startsWith('video/') ? 'video' : 'image';
+              
+              if (type === 'image') {
+                newMediaFiles.images.push({ url, id: fileId });
+              } else {
+                newMediaFiles.videos.push({ url, id: fileId });
+              }
+            } catch (error) {
+              console.error(`Error loading attachment ${fileId}:`, error);
+            } finally {
+              setLoadingStates(prev => ({ ...prev, [fileId]: false }));
+            }
+          }
+  
+          setMediaFiles(newMediaFiles);
         }
-        setLoadingImages(false);
+        setIsLoadingMedia(false);
       };
-
-      loadImages();
-
-      // Cleanup function to revoke object URLs
+  
+      loadMediaFiles();
+  
       return () => {
-        images.forEach(url => URL.revokeObjectURL(url));
+        // Cleanup object URLs
+        [...(mediaFiles.images || []), ...(mediaFiles.videos || [])].forEach(file => {
+          if (file?.url) {
+            URL.revokeObjectURL(file.url);
+          }
+        });
         document.removeEventListener('mousedown', handleClickOutside);
       };
-    }, [report.status]);
+    }, [report.id, report.attachments, report.priority]);
+  
+    const handleFlagToggle = () => {
+      handleFlagUpdate(report.id, !isPriority);
+      setIsPriority(!isPriority);
+    };
 
-    const FullScreenImageModal = ({ imageUrl, onClose }) => {
-      return (
-        <div 
-          className="fixed inset-0 z-[100] bg-black bg-opacity-90 flex items-center justify-center p-4 cursor-pointer"
-          onClick={onClose}
-        >
-          <div className="relative max-w-[90%] max-h-[90%]">
-            <button 
-              onClick={onClose}
-              className="absolute top-4 right-4 bg-white/20 hover:bg-white/40 rounded-full p-2 z-50"
-            >
-              <XMarkIcon className="h-8 w-8 text-white" />
-            </button>
-            <img 
-              src={imageUrl} 
-              alt="Full screen attachment" 
-              className="max-w-full max-h-full object-contain"
-              onClick={(e) => e.stopPropagation()}
-            />
+    const VideoPreview = ({ video, onClick }) => (
+      <div 
+        className="group relative aspect-video rounded-lg overflow-hidden bg-black"
+        onClick={onClick}
+      >
+        <video
+          src={video.url}
+          className="w-full h-full object-contain"
+          poster="/api/placeholder/640/360"
+        />
+        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-all flex flex-col items-center justify-center">
+          <PlayIcon className="h-16 w-16 text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
+          <span className="text-white text-sm mt-2 opacity-0 group-hover:opacity-100 transition-all">
+            Click to expand
+          </span>
+        </div>
+      </div>
+    );
+
+    const ImagePreview = ({ image, onClick }) => (
+      <div 
+        className="relative aspect-square cursor-pointer group rounded-lg overflow-hidden"
+        onClick={onClick}
+      >
+        <img
+          src={image.url}
+          alt="Report attachment"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
+        <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <EyeIcon className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </div>
-      );
-    };
+      </div>
+    );
+
+    const FullScreenMediaModal = ({ mediaUrl, type, onClose }) => (
+      <div 
+        className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex items-center justify-center p-4"
+        onClick={onClose}
+      >
+        <div className="relative max-w-[90%] max-h-[90vh]">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
+            className="absolute -top-12 right-0 bg-white/10 hover:bg-white/20 rounded-full p-2 z-50 transition-colors"
+          >
+            <XMarkIcon className="h-6 w-6 text-white" />
+          </button>
+          {type === 'video' ? (
+            <video 
+              src={mediaUrl}
+              controls
+              autoPlay
+              className="max-w-full max-h-[90vh] rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img 
+              src={mediaUrl} 
+              alt="Full screen media"
+              className="max-w-full max-h-[90vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
+        </div>
+      </div>
+    );  
 
     if (!report) return null;
 
@@ -405,7 +548,20 @@ const AdminReport = () => {
         >
           <div className="p-6 space-y-6">
             <div className="flex justify-between items-start">
-              <h2 className="text-2xl font-bold text-gray-900">Report Details</h2>
+            < div className="flex items-center gap-4">
+                <h2 className="text-2xl font-bold text-gray-900">Report Details</h2>
+                <button
+                  onClick={handleFlagToggle}
+                  className={`p-2 rounded-full transition-colors ${
+                    isPriority 
+                      ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                  title={isPriority ? "Remove priority flag" : "Flag as priority"}
+                >
+                  <FlagIcon className="h-5 w-5" />
+                </button>
+              </div>
               <button 
                 onClick={onClose}
                 className="p-1 hover:bg-gray-100 rounded-full"
@@ -461,34 +617,63 @@ const AdminReport = () => {
               </div>
 
               <div>
-                <p className="text-sm text-gray-500 mb-2">Attachments</p>
-                {loadingImages ? (
-                  <div className="flex justify-center p-4">
-                    <div className="animate-spin h-6 w-6 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Attachments ({(mediaFiles.images.length + mediaFiles.videos.length)} total)
+                </p>
+                {isLoadingMedia ? (
+                  <div className="flex justify-center p-8">
+                    <div className="animate-spin h-8 w-8 border-3 border-blue-500 rounded-full border-t-transparent"></div>
                   </div>
-                ) : images.length > 0 ? (
-                  <div className="grid grid-cols-2 gap-4">
-                    {images.map((imageUrl, index) => (
-                      <div key={index} className="relative aspect-square" onClick={() => setFullScreenImage(imageUrl)}>
-                        <img
-                          src={imageUrl}
-                          alt={`Damage report ${index + 1}`}
-                          className="rounded-lg object-cover w-full h-full"
-                        />
+                ) : (mediaFiles.images.length > 0 || mediaFiles.videos.length > 0) ? (
+                  <div className="space-y-6">
+                    {mediaFiles.videos.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">
+                          Videos ({mediaFiles.videos.length})
+                        </h4>
+                        <div className="grid grid-cols-1 gap-4">
+                          {mediaFiles.videos.map((video) => (
+                            <VideoPreview
+                              key={`video-${video.id}`}
+                              video={video}
+                              onClick={() => setFullScreenMedia({ url: video.url, type: 'video' })}
+                            />
+                          ))}
+                        </div>
                       </div>
-                    ))}
+                    )}
+
+                    {mediaFiles.images.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-medium text-gray-700 mb-3">
+                          Images ({mediaFiles.images.length})
+                        </h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {mediaFiles.images.map((image) => (
+                            <ImagePreview
+                              key={`image-${image.id}`}
+                              image={image}
+                              onClick={() => setFullScreenMedia({ url: image.url, type: 'image' })}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <p className="text-sm text-gray-500 italic text-center p-4">
-                    No attachments available
-                  </p>
+                  <div className="text-center py-8 px-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-500">
+                      No attachments available
+                    </p>
+                  </div>
                 )}
               </div>
-              
-              {fullScreenImage && (
-                <FullScreenImageModal 
-                  imageUrl={fullScreenImage} 
-                  onClose={() => setFullScreenImage(null)} 
+
+              {fullScreenMedia && (
+                <FullScreenMediaModal 
+                  mediaUrl={fullScreenMedia.url}
+                  type={fullScreenMedia.type}
+                  onClose={() => setFullScreenMedia(null)}
                 />
               )}
               
@@ -602,6 +787,8 @@ const AdminReport = () => {
     );
   }
 
+  const tableHeaders = ["Name", "Block No.", "Room No.", "Damage Type", "Title", "Date", "Days Elapsed", "Status", "Actions"];
+
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
       <div className="bg-white rounded-lg shadow-md">
@@ -648,7 +835,7 @@ const AdminReport = () => {
             <table className="w-full min-w-[640px] table-auto">
               <thead>
                 <tr>
-                  {["Name", "Block No.", "Room No.", "Damage Type", "Title", "Date", "Days Elapsed", "Status", "Actions"].map((el) => (
+                  {tableHeaders.map((el) => (
                     <th
                       key={el}
                       className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
@@ -671,7 +858,7 @@ const AdminReport = () => {
                   }`;
 
                   return (
-                    <tr key={report.id} className="hover:bg-gray-50">
+                    <tr key={report.id} className={`hover:bg-gray-50 ${report.priority ? 'bg-red-50' : ''}`}>
                       <td className={className}>
                         <div className="flex items-center gap-4">
                           <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
@@ -679,7 +866,7 @@ const AdminReport = () => {
                               {report.reportedBy?.charAt(0)}
                             </span>
                           </div>
-                          <div>
+                          <div className="flex items-center gap-2">
                             <p className="text-sm font-semibold text-gray-800">
                               {report.reportedBy}
                             </p>
@@ -789,47 +976,51 @@ const AdminReport = () => {
               </button>
             </div>
           </div>
-        {filteredData().map((report) => (
-          <div key={report.id} className="p-4 border-b border-gray-400">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-600 font-semibold">
-                    {report.reportedBy?.charAt(0)}
-                  </span>
+        {filteredData().map((report) => { 
+          return (
+            <div key={report.id} className="p-4 border-b border-gray-400">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                    <span className="text-gray-600 font-semibold">
+                      {report.reportedBy?.charAt(0)}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{report.reportedBy}</p>
+                    <p className="text-xs text-gray-500">{new Date(report.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handleViewReport(report)}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <EyeIcon className="h-4 w-4 text-gray-600" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <div>
+                  <span className="text-xs text-gray-800">Block: {report.location}</span>
                 </div>
                 <div>
-                  <p className="text-sm font-semibold text-gray-800">{report.reportedBy}</p>
-                  <p className="text-xs text-gray-500">{new Date(report.createdAt).toLocaleDateString()}</p>
+                  <span className="text-xs text-gray-800">Room: {report.roomNo}</span>
                 </div>
+                <div className="flex justify-between">
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
+                    {report.category || 'Other'}
+                  </span>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold`}>
+                    <StatusBadge status={report.status} />
+                  </span>
+                </div>
+                <p className="text-sm text-gray-900 line-clamp-2">{report.description}</p>
               </div>
-              <button
-                onClick={() => setSelectedReport(report)}
-                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-              >
-                <EyeIcon className="h-4 w-4 text-gray-600" />
-              </button>
             </div>
-            
-            <div className="space-y-2">
-              <div>
-                <span className="text-xs text-gray-800">Block: {report.location}</span>
-              </div>
-              <div>
-                <span className="text-xs text-gray-800">Room: {report.roomNo}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
-                  {report.category || 'Other'}
-                </span>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold`}>
-                  <StatusBadge status={report.status} />
-                </span>
-              </div>
-              <p className="text-sm text-gray-900 line-clamp-2">{report.description}</p>
-            </div>
-          </div>
-        ))}
+          );  
+      })}
       </div>
         
       {selectedReport && (
