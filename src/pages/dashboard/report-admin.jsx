@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PlayIcon, FlagIcon } from "@heroicons/react/24/solid";
 
+const LoadingSpinner = () => (
+    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+);
+
 const Toast = ({ message, type, onClose }) => {
   return (
     <div className={`fixed bottom-4 right-4 z-50 rounded-lg shadow-lg p-4 ${
@@ -369,7 +373,6 @@ const AdminReport = () => {
           });
           setLoadingStates(initialLoadingStates);
   
-          // Process each attachment
           for (const fileId of report.attachments) {
             try {
               const response = await fetch(`https://theezfixapi.onrender.com/api/v1/reports/${report.id}/attachments/${fileId}`);
@@ -416,42 +419,90 @@ const AdminReport = () => {
       setIsPriority(!isPriority);
     };
 
-    const VideoPreview = ({ video, onClick }) => (
-      <div 
-        className="group relative aspect-video rounded-lg overflow-hidden bg-black"
-        onClick={onClick}
-      >
-        <video
-          src={video.url}
-          className="w-full h-full object-contain"
-          poster="/api/placeholder/640/360"
-        />
-        <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-all flex flex-col items-center justify-center">
-          <PlayIcon className="h-16 w-16 text-white opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all" />
-          <span className="text-white text-sm mt-2 opacity-0 group-hover:opacity-100 transition-all">
-            Click to expand
-          </span>
-        </div>
-      </div>
-    );
-
-    const ImagePreview = ({ image, onClick }) => (
-      <div 
-        className="relative aspect-square cursor-pointer group rounded-lg overflow-hidden"
-        onClick={onClick}
-      >
-        <img
-          src={image.url}
-          alt="Report attachment"
-          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-        <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity">
-          <div className="absolute inset-0 flex items-center justify-center">
-            <EyeIcon className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+    const VideoPreview = ({ video, onClick, isLoading }) => {
+      const videoRef = useRef(null);
+      const [thumbnail, setThumbnail] = useState('');
+    
+      useEffect(() => {
+        const generateThumbnail = () => {
+          const videoElement = videoRef.current;
+          if (videoElement) {
+            videoElement.currentTime = 0.1;
+            videoElement.addEventListener('loadeddata', () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = videoElement.videoWidth;
+              canvas.height = videoElement.videoHeight;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+              setThumbnail(canvas.toDataURL());
+            }, { once: true });
+          }
+        };
+    
+        if (!isLoading) {
+          generateThumbnail();
+        }
+      }, [video.url, isLoading]);
+    
+      if (isLoading) {
+        return (
+          <div className="aspect-video rounded-lg bg-gray-100 flex items-center justify-center">
+            <LoadingSpinner />
+          </div>
+        );
+      }
+    
+      return (
+        <div 
+          className="group relative aspect-video rounded-lg overflow-hidden bg-gray-100 cursor-pointer"
+          onClick={onClick}
+        >
+          <video ref={videoRef} src={video.url} className="hidden" preload="metadata" />
+          <div 
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${thumbnail || '/api/placeholder/640/360'})` }}
+          />
+          <div className="absolute inset-0 bg-black/30 group-hover:bg-black/50 transition-all flex flex-col items-center justify-center">
+            <div className="transform group-hover:scale-110 transition-all duration-200">
+              <div className="rounded-full bg-white/90 p-4">
+                <PlayIcon className="h-8 w-8 text-gray-900" />
+              </div>
+            </div>
+            <span className="text-white text-sm mt-3 opacity-0 group-hover:opacity-100 transition-all font-medium">
+              Click to play video
+            </span>
           </div>
         </div>
-      </div>
-    );
+      );
+    };
+
+    const ImagePreview = ({ image, onClick, isLoading }) => {
+      if (isLoading) {
+        return (
+          <div className="aspect-square rounded-lg bg-gray-100 flex items-center justify-center">
+            <LoadingSpinner />
+          </div>
+        );
+      }
+    
+      return (
+        <div 
+          className="relative aspect-square cursor-pointer group rounded-lg overflow-hidden"
+          onClick={onClick}
+        >
+          <img
+            src={image.url}
+            alt="Report attachment"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+          <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-20 transition-opacity">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <EyeIcon className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+            </div>
+          </div>
+        </div>
+      );
+    };
 
     const FullScreenMediaModal = ({ mediaUrl, type, onClose }) => (
       <div 
@@ -622,7 +673,7 @@ const AdminReport = () => {
                 </p>
                 {isLoadingMedia ? (
                   <div className="flex justify-center p-8">
-                    <div className="animate-spin h-8 w-8 border-3 border-blue-500 rounded-full border-t-transparent"></div>
+                    <LoadingSpinner />
                   </div>
                 ) : (mediaFiles.images.length > 0 || mediaFiles.videos.length > 0) ? (
                   <div className="space-y-6">
@@ -637,6 +688,7 @@ const AdminReport = () => {
                               key={`video-${video.id}`}
                               video={video}
                               onClick={() => setFullScreenMedia({ url: video.url, type: 'video' })}
+                              isLoading={loadingStates[video.id]}
                             />
                           ))}
                         </div>
@@ -654,6 +706,7 @@ const AdminReport = () => {
                               key={`image-${image.id}`}
                               image={image}
                               onClick={() => setFullScreenMedia({ url: image.url, type: 'image' })}
+                              isLoading={loadingStates[image.id]}
                             />
                           ))}
                         </div>
@@ -698,7 +751,7 @@ const AdminReport = () => {
                 </select>
                   {isUpdating && (
                     <div className="flex items-center justify-center">
-                      <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                      <LoadingSpinner />
                     </div>
                   )}
                 </div>
@@ -738,7 +791,7 @@ const AdminReport = () => {
                     className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   >
                     {isCommenting ? (
-                      <div className="animate-spin h-5 w-5 border-2 border-white rounded-full border-t-transparent"></div>
+                      <LoadingSpinner />
                     ) : (
                       <PaperAirplaneIcon className="h-5 w-5" />
                     )}
@@ -760,7 +813,7 @@ const AdminReport = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-full">
-        <div className="animate-spin h-12 w-12 border-4 border-black rounded-full border-t-transparent"></div>
+        <LoadingSpinner />
       </div>
     );
   }
