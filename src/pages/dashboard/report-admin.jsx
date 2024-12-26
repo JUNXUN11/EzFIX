@@ -221,7 +221,7 @@ const AdminReport = () => {
       const colors = {
         fixed: "bg-green-100 text-green-800",
         rejected: "bg-red-100 text-red-800",
-        "in progress": "bg-orange-100 text-orange-800",
+        ongoing: "bg-orange-100 text-orange-800",
         pending: "bg-gray-100 text-gray-800"
       };
       return colors[status?.toLowerCase()] || colors.pending;
@@ -348,7 +348,7 @@ const AdminReport = () => {
     if (!report) return null;
 
     const statusOptions = [
-      { value: "in progress", label: "In Progress" },
+      { value: "ongoing", label: "Ongoing" },
       { value: "fixed", label: "Fixed" },
       { value: "rejected", label: "Rejected" },
       { value: "pending", label: "Pending" }
@@ -426,6 +426,13 @@ const AdminReport = () => {
                   <p className="text-sm text-gray-500">
                     Reported on {new Date(report.createdAt).toLocaleDateString()}
                   </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                <div>
+                  <p className="text-sm text-gray-500">Title</p>
+                  <p className="font-semibold">{report.title}</p>
                 </div>
               </div>
 
@@ -641,7 +648,7 @@ const AdminReport = () => {
             <table className="w-full min-w-[640px] table-auto">
               <thead>
                 <tr>
-                  {["Name", "Block No.", "Room No.", "Damage Type", "Description", "Date", "Days Elapsed", "Status", "Actions"].map((el) => (
+                  {["Name", "Block No.", "Room No.", "Damage Type", "Title", "Date", "Days Elapsed", "Status", "Actions"].map((el) => (
                     <th
                       key={el}
                       className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
@@ -696,7 +703,7 @@ const AdminReport = () => {
                       </td>
                       <td className={className}>
                         <p className="text-sm font-semibold text-gray-600">
-                          {report.description}
+                          {report.title}
                         </p>
                       </td>
                       <td className={className}>
