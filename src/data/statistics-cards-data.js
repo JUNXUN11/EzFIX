@@ -47,19 +47,19 @@ export function useStatisticsCardsData() {
         const newReports = data.filter((report) => report.status === "pending").length;
         const resolvedReports = data.filter((report) => report.status === "fixed").length;
         const rejectedReports = data.filter((report) => report.status === "rejected").length;
-        const pendingReports = data.filter((report) => report.status === "in progress").length;
+        const pendingReports = data.filter((report) => report.status === "ongoing").length;
 
         setCardsData([
           {
             color: "yellow",
             icon: ClipboardDocumentListIcon,
-            title: "New Reports",
+            title: "Pending",
             value: newReports.toString(),
           },
           {
             color: "green",
             icon: CheckIcon,
-            title: "Resolved Issues",
+            title: "Fixed Issues",
             value: resolvedReports.toString(),
           },
           {
@@ -71,7 +71,7 @@ export function useStatisticsCardsData() {
           {
             color: "orange",
             icon: ExclamationCircleIcon,
-            title: "In Progress Reports",
+            title: "On Going Reports",
             value: pendingReports.toString(),
           },
         ]);
