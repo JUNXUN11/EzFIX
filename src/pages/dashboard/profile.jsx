@@ -226,7 +226,7 @@ export function Profile() {
             <div className="relative">
             {imageLoading ? (
                 <div className="flex justify-center items-center h-24 w-24">
-                  <ClipLoader size={40} color="#3b82f6" />
+                  <ClipLoader size={40} color="#000000" />
                 </div>
               ) : (
               <Avatar

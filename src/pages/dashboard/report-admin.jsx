@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PlayIcon, FlagIcon } from "@heroicons/react/24/solid";
 
 const LoadingSpinner = () => (
-    <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full"></div>
+    <div className="animate-spin h-8 w-8 border-4 border-black border-t-transparent rounded-full"></div>
 );
 
 const Toast = ({ message, type, onClose }) => {
@@ -605,7 +605,7 @@ const AdminReport = () => {
                   onClick={handleFlagToggle}
                   className={`p-2 rounded-full transition-colors ${
                     isPriority 
-                      ? 'bg-red-100 text-red-600 hover:bg-red-200' 
+                      ? 'bg-red-100 text-red-900 hover:bg-red-200' 
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                   title={isPriority ? "Remove priority flag" : "Flag as priority"}
@@ -730,8 +730,8 @@ const AdminReport = () => {
                 />
               )}
               
-              <div className="border-t pt-4">
-                <p className="text-sm text-gray-500 mb-3">Update Status</p>
+              <div className=" border-gray-500 border-t-4 pt-4 text-center">
+                <p className="text-lg font-semibold mb-6">Update Status</p>
                 <div className="flex flex-col gap-2">
                 <select
                   value={currentStatus || 'pending'}
@@ -760,8 +760,8 @@ const AdminReport = () => {
                 )}
               </div>
 
-              <div className="p-6 border-t">
-                <h3 className="text-lg font-semibold mb-4">Comments</h3>
+              <div className="mt-6 border-gray-500 border-t-4">
+                <h3 className="text-lg font-semibold text-center mb-4 mt-8">Comments</h3>
                 
                 {/* Existing Comment Display */}
                 {comment && (
@@ -788,7 +788,7 @@ const AdminReport = () => {
                   <button
                     onClick={handleAddComment}
                     disabled={isCommenting || !newComment.trim()}
-                    className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    className="bg-black text-white p-3 rounded-lg hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed flex items-center"
                   >
                     {isCommenting ? (
                       <LoadingSpinner />
