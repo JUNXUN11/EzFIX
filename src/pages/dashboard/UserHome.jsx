@@ -11,7 +11,6 @@ export function UserHome() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [announcements, setAnnouncements] = useState([]);
-
   // Function to open the modal with the clicked image
   const handleImageClick = (imageSrc) => {
     setSelectedImage(imageSrc);
