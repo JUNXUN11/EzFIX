@@ -27,10 +27,9 @@ export function Sidenav({ brandImg, brandName, routes }) {
     transparent: "bg-transparent",
   };
 
-  // Handle click outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
+      if (window.innerWidth < 1024 && // Check for screens below lg breakpoint
         sidenavRef.current && 
         !sidenavRef.current.contains(event.target) &&
         toggleButtonRef.current &&
@@ -53,15 +52,12 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
   return (
     <>
-      {/* Sidenav */}
       <aside
         ref={sidenavRef}
-        className={`${sidenavTypes["white"]} ${
-          isSidenavOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 left-0 z-40 w-72 transition-transform duration-300 border-r border-blue-gray-100`}
+        className={`${sidenavTypes["white"]} fixed inset-y-0 left-0 z-40 w-72 transition-transform duration-300 border-r border-blue-gray-100
+          lg:translate-x-0 ${isSidenavOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="relative flex flex-col h-full">
-          {/* Sidenav Header with Toggle Button */}
           <div className="relative">
             <Link to="#" className="py-6 px-8 text-center">
               <div className="flex items-center gap-4 justify-center">
@@ -71,27 +67,25 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 </Typography>
               </div>
             </Link>
-            {/* Toggle Button positioned to overlap with the logo */}
             <div 
               ref={toggleButtonRef}
-              className="absolute -right-5 top-1/2 transform -translate-y-1/2 z-50"
+              className="absolute -right-7 top-1/2 transform -translate-y-1/2 z-50 lg:hidden"
             >
               <IconButton
                 variant="text"
                 color="blue-gray"
-                className="h-8 w-8 rounded-full bg-white shadow-md hover:bg-gray-100"
+                className="h-16 w-16 rounded-full bg-white shadow-md hover:bg-gray-100"
                 onClick={() => setIsSidenavOpen(!isSidenavOpen)}
               >
                 {isSidenavOpen ? (
-                  <ArrowLeftIcon className="h-5 w-5" />
+                  <ArrowLeftIcon className="h-6 w-6" />
                 ) : (
-                  <ArrowRightIcon className="h-5 w-5" />
+                  <ArrowRightIcon className="h-6 w-6" />
                 )}
               </IconButton>
             </div>
           </div>
 
-          {/* Navigation Links */}
           <div className="m-4 flex-1 overflow-y-auto">
             {routes
               .filter((route) => route.layout !== "auth")
@@ -148,7 +142,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
               ))}
           </div>
 
-          {/* Logout Button */}
           <div className="p-4">
             <Button
               variant="gradient"
@@ -163,7 +156,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
         </div>
       </aside>
 
-      {/* Logout Dialog */}
       <Dialog
         open={showLogoutDialog}
         handler={() => setShowLogoutDialog(false)}
@@ -201,7 +193,5 @@ Sidenav.propTypes = {
   brandName: PropTypes.string,
   routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
-
-Sidenav.displayName = "/src/widgets/layout/sidenav.jsx";
 
 export default Sidenav;
