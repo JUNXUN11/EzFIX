@@ -45,7 +45,7 @@ export function useStatisticsChartsData() {
           const dayOfWeek = new Date(report.createdAt).toLocaleDateString("en-US", { weekday: "short" });
           reportCountPerDay[dayOfWeek] = (reportCountPerDay[dayOfWeek] || 0) + 1;
 
-          if (report.status === "Resolved") {
+          if (report.status === "fixed") {
             resolutionTrend[dayOfWeek] = (resolutionTrend[dayOfWeek] || 0) + 1;
           }
         });
@@ -54,11 +54,30 @@ export function useStatisticsChartsData() {
         setWeeklyReportSubmissionsChart((prevChart) => ({
           ...prevChart,
           series: [{ ...prevChart.series[0], data: Object.values(reportCountPerDay) }],
+          options: {
+            ...prevChart.options,
+            yaxis: {
+              ...prevChart.options.yaxis,
+              labels: {
+                formatter: (value) => Math.floor(value),
+              },
+            },
+          },
         }));
+        
 
         setWeeklyResolutionTrendChart((prevChart) => ({
           ...prevChart,
           series: [{ ...prevChart.series[0], data: Object.values(resolutionTrend) }],
+          options: {
+            ...prevChart.options,
+            yaxis: {
+              ...prevChart.options.yaxis,
+              labels: {
+                formatter: (value) => Math.floor(value),
+              },
+            },
+          },
         }));
       } catch (error) {
         console.error("Error fetching data:", error);
