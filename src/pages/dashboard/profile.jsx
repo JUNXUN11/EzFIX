@@ -231,7 +231,6 @@ export function Profile() {
               ) : (
               <Avatar
                 src={profilePicture}
-                alt="Profile Picture"
                 size="xxl"
                 variant="circular"
                 className="border-2 border-white shadow-xl"
@@ -270,7 +269,7 @@ export function Profile() {
 
           <div className="flex items-center justify-between mt-6">
             <Typography variant="h6" color="blue-gray">
-              Welcome to your profile page! Here you can view and edit your personal information.
+              Welcome to your profile page! 
             </Typography>
             {!isEditing && (
               <Button

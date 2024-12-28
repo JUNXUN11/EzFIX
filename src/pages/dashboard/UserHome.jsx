@@ -119,7 +119,7 @@ export function UserHome() {
         <h2 className="text-3xl font-semibold text-gray-800 mb-8">Frequently Asked Questions</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
           {faqData.map((faq, index) => (
-            <div key={index} className="p-6 bg-gray-50 hover:bg-blue-100 rounded-lg shadow-lg transition-all duration-300">
+            <div key={index} className="p-6 bg-gray-50 hover:bg-gray-200 rounded-lg shadow-lg transition-all duration-300">
               <h3 className="text-xl font-semibold text-gray-800">{faq.question}</h3>
               <p className="text-gray-600 mt-2">{faq.answer}</p>
             </div>

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { Link, NavLink } from "react-router-dom";
-import { XMarkIcon, ArrowRightIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
 import {
   Button,
   IconButton,
@@ -14,10 +14,12 @@ import {
 import { useAuth } from "@/context/AuthContext";
 
 export function Sidenav({ brandImg, brandName, routes }) {
-  const [isSidenavOpen, setIsSidenavOpen] = useState(false); // State for sidenav toggle
+  const [isSidenavOpen, setIsSidenavOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const { user, logout } = useAuth();
+  const sidenavRef = useRef(null);
+  const toggleButtonRef = useRef(null);
 
   const sidenavTypes = {
     dark: "bg-gradient-to-br from-gray-800 to-gray-900",
@@ -25,38 +27,38 @@ export function Sidenav({ brandImg, brandName, routes }) {
     transparent: "bg-transparent",
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (window.innerWidth < 1024 && // Check for screens below lg breakpoint
+        sidenavRef.current && 
+        !sidenavRef.current.contains(event.target) &&
+        toggleButtonRef.current &&
+        !toggleButtonRef.current.contains(event.target)
+      ) {
+        setIsSidenavOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     setIsLoggingOut(true);
     setShowLogoutDialog(false);
-    logout(); 
+    logout();
     setIsLoggingOut(false);
   };
 
   return (
     <>
-      {/* Navigation Button for Smaller Screens and Custom iPad Size */}
-      <nav className="fixed inset-y-0 left-0 w-16 bg-transparent shadow-sm z-50 flex items-center justify-center xl:hidden">
-        <IconButton
-          onClick={() => setIsSidenavOpen(!isSidenavOpen)}
-          className="text-blue-gray-800 bg-transparent hover:bg-gray-200 active:bg-gray-300"
-        >
-          {isSidenavOpen ? (
-            <XMarkIcon className="h-6 w-6" />
-          ) : (
-            <ArrowRightIcon className="h-5 w-5" />
-          )}
-        </IconButton>
-      </nav>
-
-      {/* Sidenav for Large Screens and Toggle for Medium/iPad Screens */}
       <aside
-        className={`${sidenavTypes["white"]} ${
-          isSidenavOpen ? "translate-x-0" : "-translate-x-full"
-        } xl:translate-x-0 fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 border-r border-blue-gray-100`}
+        ref={sidenavRef}
+        className={`${sidenavTypes["white"]} fixed inset-y-0 left-0 z-40 w-72 transition-transform duration-300 border-r border-blue-gray-100
+          lg:translate-x-0 ${isSidenavOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="relative flex flex-col h-full">
-          {/* Sidenav Content */}
-          <div>
+          <div className="relative">
             <Link to="#" className="py-6 px-8 text-center">
               <div className="flex items-center gap-4 justify-center">
                 <img src={brandImg} alt="Brand Logo" className="h-8" />
@@ -65,22 +67,28 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 </Typography>
               </div>
             </Link>
-            <IconButton
-              variant="text"
-              color="blue-gray"
-              size="sm"
-              ripple={false}
-              className="absolute right-0 top-0 xl:hidden"
-              onClick={() => setIsSidenavOpen(false)}
+            <div 
+              ref={toggleButtonRef}
+              className="absolute -right-7 top-1/2 transform -translate-y-1/2 z-50 lg:hidden"
             >
-              <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-blue-gray-800" />
-            </IconButton>
+              <IconButton
+                variant="text"
+                color="blue-gray"
+                className="h-16 w-16 rounded-full bg-white shadow-md hover:bg-gray-100"
+                onClick={() => setIsSidenavOpen(!isSidenavOpen)}
+              >
+                {isSidenavOpen ? (
+                  <ArrowLeftIcon className="h-6 w-6" />
+                ) : (
+                  <ArrowRightIcon className="h-6 w-6" />
+                )}
+              </IconButton>
+            </div>
           </div>
 
-          {/* Navigation Links */}
           <div className="m-4 flex-1 overflow-y-auto">
             {routes
-              .filter((route) => route.layout !== "auth") // Filter out "auth" routes
+              .filter((route) => route.layout !== "auth")
               .map(({ layout, title, pages }, key) => (
                 <ul key={key} className="mb-4 flex flex-col gap-4">
                   {title && (
@@ -133,6 +141,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 </ul>
               ))}
           </div>
+
           <div className="p-4">
             <Button
               variant="gradient"
@@ -147,7 +156,6 @@ export function Sidenav({ brandImg, brandName, routes }) {
         </div>
       </aside>
 
-      {/* Logout Dialog */}
       <Dialog
         open={showLogoutDialog}
         handler={() => setShowLogoutDialog(false)}
@@ -185,7 +193,5 @@ Sidenav.propTypes = {
   brandName: PropTypes.string,
   routes: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
-
-Sidenav.displayName = "/src/widgets/layout/sidenav.jsx";
 
 export default Sidenav;
