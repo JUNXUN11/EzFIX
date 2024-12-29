@@ -97,9 +97,13 @@ export function SignIn() {
                 {error}
               </Typography>
             )}
-
+              <div className="flex justify-end">
+                <Link to="/auth/forget-password" className="my-2 text-blue-gray-500 font-medium">
+                  Forget password
+                </Link>
+              </div>
             <Button
-              className="mt-16 py-3 rounded-lg relative flex items-center justify-center gap-2"
+              className="mt-3 py-3 rounded-lg relative flex items-center justify-center gap-2"
               fullWidth
               type="submit"
               disabled={isLoading || !username || !password}
