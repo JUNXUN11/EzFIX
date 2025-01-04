@@ -75,16 +75,6 @@ export const routes = [
         ),
       },
       {
-        icon: <UserCircleIcon {...icon} />,
-        name: "profile",
-        path: "/profile",
-        element: (
-          <ProtectedRoute>
-            <Profile />
-          </ProtectedRoute>
-        ),
-      },
-      {
         icon: <InformationCircleIcon {...icon} />,
         name: "Announcements",
         path: "/announcements",
@@ -94,6 +84,16 @@ export const routes = [
           </ProtectedRoute>
         ),
       },
+      {
+        icon: <UserCircleIcon {...icon} />,
+        name: "profile",
+        path: "/profile",
+        element: (
+          <ProtectedRoute>
+            <Profile />
+          </ProtectedRoute>
+        ),
+      },     
     ],
   },
   {
