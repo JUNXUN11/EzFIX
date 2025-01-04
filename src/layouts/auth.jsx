@@ -30,6 +30,10 @@ export function Auth() {
       path: "/auth/sign-in",
       icon: ArrowRightOnRectangleIcon,
     },
+    {
+      name: "forget password",
+      path: "/auth/forget-password",
+    },
   ];
 
   return (

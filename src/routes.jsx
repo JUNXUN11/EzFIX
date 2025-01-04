@@ -11,7 +11,7 @@ import { Home, Profile, Announcements} from "@/pages/dashboard";
 import AdminReport from "./pages/dashboard/report-admin"
 import Report from "./pages/dashboard/report";
 import CreateReport from "./pages/dashboard/CreateReport";
-import { SignIn, SignUp } from "@/pages/auth";
+import { SignIn, SignUp, ForgetPassword } from "@/pages/auth";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import UserHome from "@/pages/dashboard/UserHome"; 
 
@@ -111,6 +111,11 @@ export const routes = [
         name: "sign up",
         path: "/sign-up",
         element: <SignUp />,
+      },
+      {
+        name: "forget password",
+        path: "/forget-password",
+        element: <ForgetPassword />,
       },
     ],
   },

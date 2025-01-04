@@ -714,7 +714,7 @@ const AdminReport = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="text-center py-8 px-4 bg-gray-50 rounded-lg">
+                  <div className="py-8 px-4 bg-gray-50 rounded-lg">
                     <p className="text-sm text-gray-500">
                       No attachments available
                     </p>
@@ -730,8 +730,8 @@ const AdminReport = () => {
                 />
               )}
               
-              <div className=" border-gray-500 border-t-4 pt-4 text-center">
-                <p className="text-lg font-semibold mb-6">Update Status</p>
+              <div className="border-t pt-4">
+              <p className="text-sm text-gray-500 mb-3">Update Status</p>
                 <div className="flex flex-col gap-2">
                 <select
                   value={currentStatus || 'pending'}
@@ -760,9 +760,8 @@ const AdminReport = () => {
                 )}
               </div>
 
-              <div className="mt-6 border-gray-500 border-t-4">
-                <h3 className="text-lg font-semibold text-center mb-4 mt-8">Comments</h3>
-                
+              <div className="p-6 border-t">
+                <h3 className="text-lg font-semibold mb-4">Comments</h3>             
                 {/* Existing Comment Display */}
                 {comment && (
                   <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -788,7 +787,7 @@ const AdminReport = () => {
                   <button
                     onClick={handleAddComment}
                     disabled={isCommenting || !newComment.trim()}
-                    className="bg-black text-white p-3 rounded-lg hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed flex items-center"
+                     className="bg-blue-500 text-white p-3 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   >
                     {isCommenting ? (
                       <LoadingSpinner />
