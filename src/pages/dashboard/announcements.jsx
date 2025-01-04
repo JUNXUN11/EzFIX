@@ -26,7 +26,7 @@ export function Announcements() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleteTargetId, setDeleteTargetId] = useState(null);
 
-  const fetchAnnouncements = async () => {
+  const fetchAnnouncements = async () => { 
     try {
       const response = await fetch(
         "https://theezfixapi.onrender.com/api/v1/announcements"

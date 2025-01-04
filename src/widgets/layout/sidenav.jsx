@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import PropTypes from "prop-types";
 import { Link, NavLink } from "react-router-dom";
-import { ArrowRightIcon, ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, ArrowLeftIcon, Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 import {
   Button,
   IconButton,
@@ -17,6 +17,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
   const [isSidenavOpen, setIsSidenavOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [isLargeScreen, setIsLargeScreen] = useState(false);
   const { user, logout } = useAuth();
   const sidenavRef = useRef(null);
   const toggleButtonRef = useRef(null);
@@ -28,8 +29,25 @@ export function Sidenav({ brandImg, brandName, routes }) {
   };
 
   useEffect(() => {
+    const handleResize = () => {
+      setIsLargeScreen(window.innerWidth >= 1280);
+      if (window.innerWidth >= 1280) {
+        setIsSidenavOpen(true);
+      } else {
+        setIsSidenavOpen(false);
+      }
+    };
+
+    // Initial check
+    handleResize();
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
-      if (window.innerWidth < 1024 && // Check for screens below lg breakpoint
+      if (!isLargeScreen && // Always check outside clicks when not on large screen
         sidenavRef.current && 
         !sidenavRef.current.contains(event.target) &&
         toggleButtonRef.current &&
@@ -41,7 +59,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }, [isLargeScreen]);
 
   const handleLogout = () => {
     setIsLoggingOut(true);
@@ -55,7 +73,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
       <aside
         ref={sidenavRef}
         className={`${sidenavTypes["white"]} fixed inset-y-0 left-0 z-40 w-72 transition-transform duration-300 border-r border-blue-gray-100
-          lg:translate-x-0 ${isSidenavOpen ? "translate-x-0" : "-translate-x-full"}`}
+          ${isLargeScreen ? "translate-x-0" : isSidenavOpen ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="relative flex flex-col h-full">
           <div className="relative">
@@ -67,20 +85,21 @@ export function Sidenav({ brandImg, brandName, routes }) {
                 </Typography>
               </div>
             </Link>
+            {/* Only show toggle button when not on large screen */}
             <div 
               ref={toggleButtonRef}
-              className="absolute -right-7 top-1/2 transform -translate-y-1/2 z-50 lg:hidden"
+              className={`absolute -right-10 top-1/5 transform -translate-y-1/2 z-50 ${isLargeScreen ? 'hidden' : ''}`}
             >
               <IconButton
                 variant="text"
-                color="blue-gray"
-                className="h-16 w-16 rounded-full bg-white shadow-md hover:bg-gray-100"
+                color="black"
+                className="h-20 w-20 rounded-r-full rounded-r-full bg-blue-100 shadow-md hover:bg-gray-100"
                 onClick={() => setIsSidenavOpen(!isSidenavOpen)}
               >
                 {isSidenavOpen ? (
-                  <ArrowLeftIcon className="h-6 w-6" />
+                  <XMarkIcon className="h-6 w-6" />
                 ) : (
-                  <ArrowRightIcon className="h-6 w-6" />
+                  <Bars3Icon className="h-6 w-6" />
                 )}
               </IconButton>
             </div>
@@ -121,6 +140,7 @@ export function Sidenav({ brandImg, brandName, routes }) {
                               isActive ? "bg-black text-white shadow-md" : "hover:text-blue-gray-700"
                             }`
                           }
+                          onClick={() => !isLargeScreen && setIsSidenavOpen(false)}
                         >
                           <Button
                             variant="text"
