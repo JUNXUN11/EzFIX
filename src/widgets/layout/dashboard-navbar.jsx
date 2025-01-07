@@ -15,19 +15,42 @@ export function DashboardNavbar() {
   const { pathname } = useLocation();
   const [layout, page] = pathname.split("/").filter((el) => el !== "");
   const { user, loading } = useAuth();
-
   const [username, setUsername] = useState("");
   const [profilePicture, setProfilePicture] = useState("");
+
+  const fetchProfilePicture = async () => {
+    try {
+      const response = await fetch(
+        `https://theezfixapi.onrender.com/api/v1/users/${user.id}/profile-image`
+      );
+  
+      if (!response.ok) {
+        throw new Error("Failed to fetch profile picture.");
+      }
+  
+      const imageBlob = await response.blob();
+      const imageUrl = URL.createObjectURL(imageBlob);
+      setProfilePicture(imageUrl);
+    } catch (error) {
+      console.error("Error fetching profile picture:", error.message);
+      setProfilePicture("https://cdn-icons-png.flaticon.com/512/5951/5951752.png");
+    }
+  };
 
   useEffect(() => {
     if (user) {
       setUsername(user.username || "User");
-      setProfilePicture(user.profilePicture || "https://cdn-icons-png.flaticon.com/512/5951/5951752.png");
+      if (!user.profilePicture) {
+        fetchProfilePicture(); // Your method to fetch the picture if not available in user data
+      } else {
+        setProfilePicture(user.profilePicture);
+      }
     } else {
       setUsername("User");
       setProfilePicture("https://cdn-icons-png.flaticon.com/512/5951/5951752.png");
     }
   }, [user]);
+
 
   if (loading) {
     return (

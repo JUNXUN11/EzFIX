@@ -34,8 +34,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
   return (
     <>
-      {/* Top Navbar with Toggle for Mobile */}
-      <nav className="fixed inset-y-0 left-0 w-16 bg-transparent shadow-sm z-50 flex items-center justify-center lg:hidden">
+      {/* Navigation Button for Smaller Screens and Custom iPad Size */}
+      <nav className="fixed inset-y-0 left-0 w-16 bg-transparent shadow-sm z-50 flex items-center justify-center xl:hidden">
         <IconButton
           onClick={() => setIsSidenavOpen(!isSidenavOpen)}
           className="text-blue-gray-800 bg-transparent hover:bg-gray-200 active:bg-gray-300"
@@ -48,15 +48,16 @@ export function Sidenav({ brandImg, brandName, routes }) {
         </IconButton>
       </nav>
 
-      {/* Sidenav */}
+      {/* Sidenav for Large Screens and Toggle for Medium/iPad Screens */}
       <aside
         className={`${sidenavTypes["white"]} ${
           isSidenavOpen ? "translate-x-0" : "-translate-x-full"
-        } fixed inset-y-0 left-0 z-50 w-72 lg:translate-x-0 transition-transform duration-300 border-r border-blue-gray-100`}
+        } xl:translate-x-0 fixed inset-y-0 left-0 z-50 w-72 transition-transform duration-300 border-r border-blue-gray-100`}
       >
         <div className="relative flex flex-col h-full">
+          {/* Sidenav Content */}
           <div>
-            <Link to="/" className="py-6 px-8 text-center">
+            <Link to="#" className="py-6 px-8 text-center">
               <div className="flex items-center gap-4 justify-center">
                 <img src={brandImg} alt="Brand Logo" className="h-8" />
                 <Typography variant="h6" color="blue-gray">
@@ -69,8 +70,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
               color="blue-gray"
               size="sm"
               ripple={false}
-              className="absolute right-0 top-0 grid lg:hidden"
-              onClick={() => setIsSidenavOpen(false)} // Close button for mobile
+              className="absolute right-0 top-0 xl:hidden"
+              onClick={() => setIsSidenavOpen(false)}
             >
               <XMarkIcon strokeWidth={2.5} className="h-5 w-5 text-blue-gray-800" />
             </IconButton>
@@ -106,28 +107,27 @@ export function Sidenav({ brandImg, brandName, routes }) {
                     .map(({ icon, name, path }) => (
                       <li key={name}>
                         <NavLink
-                        to={`/${layout}${path}`}
-                        className={({ isActive }) =>
-                          `flex items-center gap-4 px-4 capitalize rounded-lg ${
-                            isActive ? "bg-black text-white shadow-md" : "hover:text-blue-gray-700"
-                          }`
-                        }
-                      >
-                        <Button
-                          variant="text"
-                          color="blue-gray"
-                          className="flex items-center gap-4 w-full text-inherit"
+                          to={`/${layout}${path}`}
+                          className={({ isActive }) =>
+                            `flex items-center gap-4 px-4 capitalize rounded-lg ${
+                              isActive ? "bg-black text-white shadow-md" : "hover:text-blue-gray-700"
+                            }`
+                          }
                         >
-                          {icon}
-                          <Typography
-                            color="inherit"
-                            className="font-medium capitalize"
+                          <Button
+                            variant="text"
+                            color="blue-gray"
+                            className="flex items-center gap-4 w-full text-inherit"
                           >
-                            {name}
-                          </Typography>
-                        </Button>
-                      </NavLink>
-
+                            {icon}
+                            <Typography
+                              color="inherit"
+                              className="font-medium capitalize"
+                            >
+                              {name}
+                            </Typography>
+                          </Button>
+                        </NavLink>
                       </li>
                     ))}
                 </ul>
