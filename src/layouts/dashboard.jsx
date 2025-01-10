@@ -24,7 +24,7 @@ export function Dashboard() {
       />
       <div className="p-4 xl:ml-80">
         <DashboardNavbar />
-        <AIChatBot />
+        {/* <AIChatBot />
         <IconButton
           size="lg"
           color="white"
@@ -33,7 +33,7 @@ export function Dashboard() {
           onClick={() => setOpenConfigurator(dispatch, true)}
         >
           <ChatBubbleLeftRightIcon className="h-5 w-5" />
-        </IconButton>
+        </IconButton> */}
         <Routes>
           {routes.map(
             ({ layout, pages }) =>
