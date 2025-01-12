@@ -30,8 +30,8 @@ export function Sidenav({ brandImg, brandName, routes }) {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsLargeScreen(window.innerWidth >= 1280);
-      if (window.innerWidth >= 1280) {
+      setIsLargeScreen(window.innerWidth >= 1100);
+      if (window.innerWidth >= 1100) {
         setIsSidenavOpen(true);
       } else {
         setIsSidenavOpen(false);

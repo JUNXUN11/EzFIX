@@ -42,11 +42,18 @@ export function useStatisticsChartsData() {
         const resolutionTrend = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
 
         data.forEach((report) => {
-          const dayOfWeek = new Date(report.createdAt).toLocaleDateString("en-US", { weekday: "short" });
-          reportCountPerDay[dayOfWeek] = (reportCountPerDay[dayOfWeek] || 0) + 1;
-
+          // For report submissions, use createdAt
+          const submissionDay = new Date(report.createdAt).toLocaleDateString('en-US', {
+            weekday: 'short'
+          });
+          reportCountPerDay[submissionDay] = (reportCountPerDay[submissionDay] || 0) + 1;
+        
+          // For fixed reports, use updatedAt or fixedAt timestamp
           if (report.status === "fixed") {
-            resolutionTrend[dayOfWeek] = (resolutionTrend[dayOfWeek] || 0) + 1;
+            const fixedDay = new Date(report.updatedAt).toLocaleDateString('en-US', {
+              weekday: 'short'
+            });
+            resolutionTrend[fixedDay] = (resolutionTrend[fixedDay] || 0) + 1;
           }
         });
 
