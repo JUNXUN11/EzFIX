@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PlayIcon, FlagIcon } from "@heroicons/react/24/solid";
+import {ArrowPathIcon, EyeIcon, XMarkIcon, FunnelIcon, MagnifyingGlassIcon, PaperAirplaneIcon, PlayIcon, FlagIcon, ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 
 const LoadingSpinner = () => (
     <div className="animate-spin h-8 w-8 border-4 border-black border-t-transparent rounded-full"></div>
@@ -30,7 +30,9 @@ const AdminReport = () => {
   const [updateError, setUpdateError] = useState(null);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  
+  const [currentPage, setCurrentPage] = useState(1);
+  const [entriesPerPage, setEntriesPerPage] = useState(10);
+
   const handleFlagUpdate = async (reportId, isPriority) => {
     setIsUpdating(true);
     setUpdateError(null);
@@ -89,6 +91,7 @@ const AdminReport = () => {
       'blockno': 'location',
       'roomno': 'roomNo',
       'damagetype': 'category',
+      'dayselapsed': 'daysSince',
       'date': 'createdAt'
     };
     
@@ -104,7 +107,10 @@ const AdminReport = () => {
   const sortedData = () => {
     if (!reports.length) return [];
     
-    let sortableItems = [...reports];
+    let sortableItems = [...reports].map(item => ({
+      ...item, 
+      daysSince: getDaysSince(item.createdAt)
+    }));
 
     sortableItems.sort((a, b) => {
       if (a.priority === b.priority) {
@@ -333,6 +339,133 @@ const AdminReport = () => {
       console.error('Error fetching image:', error);
       return null;
     }
+  };
+
+  const handleEntriesPerPageChange = (e) => {
+    setEntriesPerPage(Number(e.target.value));
+    setCurrentPage(1); // Reset to first page when changing entries per page
+  };
+
+  // Add pagination calculations
+  const getPaginatedData = () => {
+    const filteredReports = filteredData();
+    const startIndex = (currentPage - 1) * entriesPerPage;
+    const endIndex = startIndex + entriesPerPage;
+    return filteredReports.slice(startIndex, endIndex);
+  };
+
+  const totalPages = Math.ceil(filteredData().length / entriesPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Component for pagination controls
+  const PaginationControls = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust startPage if we're near the end
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pageNumbers.push(i);
+    }
+
+    return (
+      <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6">
+        <div className="flex items-center">
+          <span className="text-sm text-gray-700 mr-4">
+            Rows per page:
+            <select
+              value={entriesPerPage}
+              onChange={handleEntriesPerPageChange}
+              className="ml-2 border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value={5}>5</option>
+              <option value={10}>10</option>
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+            </select>
+          </span>
+          <span className="text-sm text-gray-700">
+            Showing {((currentPage - 1) * entriesPerPage) + 1} to {Math.min(currentPage * entriesPerPage, filteredData().length)} of {filteredData().length} entries
+          </span>
+        </div>
+        
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="px-3 py-1 rounded-md bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronLeftIcon className="h-5 w-5" />
+          </button>
+          
+          {startPage > 1 && (
+            <>
+              <button
+                onClick={() => handlePageChange(1)}
+                className={`px-3 py-1 rounded-md text-sm font-medium ${
+                  currentPage === 1
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                1
+              </button>
+              {startPage > 2 && (
+                <span className="px-2 py-1 text-gray-500">...</span>
+              )}
+            </>
+          )}
+          
+          {pageNumbers.map(number => (
+            <button
+              key={number}
+              onClick={() => handlePageChange(number)}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                currentPage === number
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {number}
+            </button>
+          ))}
+          
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <span className="px-2 py-1 text-gray-500">...</span>
+              )}
+              <button
+                onClick={() => handlePageChange(totalPages)}
+                className={`px-3 py-1 rounded-md text-sm font-medium ${
+                  currentPage === totalPages
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {totalPages}
+              </button>
+            </>
+          )}
+          
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 rounded-md bg-white border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ChevronRightIcon className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    );
   };
 
   const ReportDetailsCard = ({ report, onClose }) => {
@@ -843,8 +976,9 @@ const AdminReport = () => {
 
   return (
     <div className="mt-12 mb-8 flex flex-col gap-12">
+      {/* Desktop view */}
       <div className="bg-white rounded-lg shadow-md">
-        {/* Desktop view */}
+        {/* Desktop header */}
         <div className="hidden md:flex mb-8 p-6 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 rounded-t-lg flex justify-between items-center">
           <h6 className="text-white text-lg font-semibold">
             Reported Damages
@@ -882,197 +1016,197 @@ const AdminReport = () => {
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto">
-          <div className="hidden md:block">
-            <table className="w-full min-w-[640px] table-auto">
-              <thead>
-                <tr>
-                  {tableHeaders.map((el) => (
-                    <th
-                      key={el}
-                      className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
-                      onClick={() => handleSort(el.toLowerCase().replace(/[. ]/g, ""))}
-                    >
-                      <span className="text-xs font-bold uppercase text-gray-600">
-                        {el}
-                        {sortConfig.key === el.toLowerCase().replace(/[. ]/g, "") && (
-                          <span>{sortConfig.direction === "asc" ? " ▲" : " ▼"}</span>
-                        )}
-                      </span>
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {filteredData().map((report, index) => {
-                  const className = `py-3 px-5 ${
-                    index === reports.length - 1 ? "" : "border-b border-gray-200"
-                  }`;
 
-                  return (
-                    <tr key={report.id} className={`hover:bg-gray-50 ${report.priority ? 'bg-red-50' : ''}`}>
-                      <td className={className}>
-                        <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                            <span className="text-gray-600 font-semibold">
-                              {report.reportedBy?.charAt(0)}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-gray-800">
-                              {report.reportedBy}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className={className}>
-                        <p className="text-sm font-semibold text-gray-600">
-                          {report.location}
-                        </p>
-                      </td>
-                      <td className={className}>
-                        <p className="text-sm font-semibold text-gray-600">
-                          {report.roomNo}
-                        </p>
-                      </td>
-                      <td className={className}>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
-                          {report.category || 'Other'}
-                        </span>
-                      </td>
-                      <td className={className}>
-                        <p className="text-sm font-semibold text-gray-600">
-                          {report.title}
-                        </p>
-                      </td>
-                      <td className={className}>
-                        <p className="text-sm font-semibold text-gray-600">
-                          {new Date(report.createdAt).toLocaleDateString()}
-                        </p>
-                      </td>
-                      <td className={className}>
-                        <p className="text-sm font-semibold text-gray-600">
-                          {getDaysSince(report.createdAt)} days
-                        </p>
-                      </td>
-                      <td className={className}>
-                        <StatusBadge status={report.status} />
-                      </td>
-                      <td className={className}>
-                        <button
-                          onClick={() => handleViewReport(report)}
-                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <EyeIcon className="h-4 w-4 text-gray-600" />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="md:hidden bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 p-4 rounded-t-lg">
+          <div className="flex justify-between items-center mb-4">
+            <h6 className="text-white text-lg font-semibold">
+              Reported Damages
+            </h6>
+            <button 
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="p-2 text-white hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <FunnelIcon className="h-5 w-5" />
+            </button>
+          </div>
+          
+          <div className="relative">
+            <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by block"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-300"
+            />
+          </div>
+          
+          {/* Collapsible Filter */}
+          <div className={`transition-all duration-300 ease-in-out ${isFilterOpen ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="w-full px-3 py-2 mt-2 border rounded-lg bg-white/10 text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              {filterOptions.map(option => (
+                <option 
+                  key={option.label} 
+                  value={option.value}
+                  className="text-gray-700"
+                >
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              onClick={fetchReports}
+              className="mt-4 flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors w-full"
+              title="Refresh Reports"
+            >
+              <ArrowPathIcon className="h-5 w-5 text-gray-700" />
+              <span className="ml-2 text-gray-700">Refresh</span>
+            </button>
           </div>
         </div>
-      </div>
-      
-      {/* Mobile view */}
-      <div className="md:hidden bg-white">
-        <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 p-4 rounded-t-lg">
-            <div className="flex justify-between items-center mb-4">
-              <h6 className="text-white text-lg font-semibold">
-                Reported Damages
-              </h6>
-              <button 
-                onClick={() => setIsFilterOpen(!isFilterOpen)}
-                className="p-2 text-white hover:bg-gray-700 rounded-lg transition-colors"
-              >
-                <FunnelIcon className="h-5 w-5" />
-              </button>
-            </div>
-            
-            <div className="relative">
-              <MagnifyingGlassIcon className="h-5 w-5 text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2" />
-              <input
-                type="text"
-                placeholder="Search by block"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white/10 text-white placeholder-gray-300"
-              />
-            </div>
-            
-            {/* Collapsible Filter */}
-            <div className={`transition-all duration-300 ease-in-out ${isFilterOpen ? 'max-h-40 opacity-100 mt-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
-              <select
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="w-full px-3 py-2 mt-2 border rounded-lg bg-white/10 text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {filterOptions.map(option => (
-                  <option 
-                    key={option.label} 
-                    value={option.value}
-                    className="text-gray-700"
+
+        
+        <div className="hidden md:block">
+          <table className="w-full min-w-[640px] table-auto">
+            <thead>
+              <tr>
+                {tableHeaders.map((el) => (
+                  <th
+                    key={el}
+                    className="border-b border-gray-200 py-3 px-5 text-left cursor-pointer"
+                    onClick={() => handleSort(el.toLowerCase().replace(/[. ]/g, ""))}
                   >
-                    {option.label}
-                  </option>
+                    <span className="text-xs font-bold uppercase text-gray-600">
+                      {el}
+                      {sortConfig.key === el.toLowerCase().replace(/[. ]/g, "") && (
+                        <span>{sortConfig.direction === "asc" ? " ▲" : " ▼"}</span>
+                      )}
+                    </span>
+                  </th>
                 ))}
-              </select>
-              <button
-                onClick={fetchReports}
-                className="mt-4 flex items-center justify-center p-2 bg-white rounded-lg shadow-sm hover:bg-gray-100 transition-colors w-full"
-                title="Refresh Reports"
-              >
-                <ArrowPathIcon className="h-5 w-5 text-gray-700" />
-                <span className="ml-2 text-gray-700">Refresh</span>
-              </button>
+              </tr>
+            </thead>
+            <tbody>
+              {getPaginatedData().map((report, index) => {
+                const className = `py-3 px-5 ${
+                  index === getPaginatedData().length - 1 ? "" : "border-b border-gray-200"
+                }`;
+                return (
+                  <tr key={report.id} className={`hover:bg-gray-50 ${report.priority ? 'bg-red-50' : ''}`}>
+                    <td className={className}>
+                      <div className="flex items-center gap-4">
+                        <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                          <span className="text-gray-600 font-semibold">
+                            {report.reportedBy?.charAt(0)}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-gray-800">
+                            {report.reportedBy}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {report.location}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {report.roomNo}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
+                        {report.category || 'Other'}
+                      </span>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {report.title}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {new Date(report.createdAt).toLocaleDateString()}
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <p className="text-sm font-semibold text-gray-600">
+                        {getDaysSince(report.createdAt)} days
+                      </p>
+                    </td>
+                    <td className={className}>
+                      <StatusBadge status={report.status} />
+                    </td>
+                    <td className={className}>
+                      <button
+                        onClick={() => handleViewReport(report)}
+                        className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                      >
+                        <EyeIcon className="h-4 w-4 text-gray-600" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      
+        {/* Mobile view */}
+        <div className="md:hidden">
+          {getPaginatedData().map((report) => (
+            <div key={report.id} className="p-4 border-b border-gray-400">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-600 font-semibold">
+                    {report.reportedBy?.charAt(0)}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{report.reportedBy}</p>
+                  <p className="text-xs text-gray-500">{new Date(report.createdAt).toLocaleDateString()}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handleViewReport(report)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <EyeIcon className="h-4 w-4 text-gray-600" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div>
+                <span className="text-xs text-gray-800">Block: {report.location}</span>
+              </div>
+              <div>
+                <span className="text-xs text-gray-800">Room: {report.roomNo}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
+                  {report.category || 'Other'}
+                </span>
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold`}>
+                  <StatusBadge status={report.status} />
+                </span>
+              </div>
+              <p className="text-sm text-gray-900 line-clamp-2">{report.description}</p>
             </div>
           </div>
-        {filteredData().map((report) => { 
-          return (
-            <div key={report.id} className="p-4 border-b border-gray-400">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-600 font-semibold">
-                      {report.reportedBy?.charAt(0)}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{report.reportedBy}</p>
-                    <p className="text-xs text-gray-500">{new Date(report.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleViewReport(report)}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <EyeIcon className="h-4 w-4 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                <div>
-                  <span className="text-xs text-gray-800">Block: {report.location}</span>
-                </div>
-                <div>
-                  <span className="text-xs text-gray-800">Room: {report.roomNo}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getCategoryColor(report.category)}`}>
-                    {report.category || 'Other'}
-                  </span>
-                  <span className={`px-2 py-1 rounded-full text-xs font-semibold`}>
-                    <StatusBadge status={report.status} />
-                  </span>
-                </div>
-                <p className="text-sm text-gray-900 line-clamp-2">{report.description}</p>
-              </div>
-            </div>
-          );  
-      })}
+          ))}
+        </div>
+        
+        <PaginationControls />
       </div>
         
       {selectedReport && (
